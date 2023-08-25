@@ -1,37 +1,41 @@
-/* Nav.module.css */
+/* Styles for the navigation bar */
 
+/* Styling for the navigation bar itself */
 nav {
-    background-color: #9a9898;
-    padding: 10px;
-  }
-  
-  ul {
-    list-style: none;
-    display: flex;
-    justify-content: flex-start; /* Align the list items to the left */
-    padding: 0;
-    margin: 0;
-  }
-  
-  li {
-    margin: 0;
-  }
-  
-  li a {
-    text-decoration: none;
-    color: #333;
-    padding: 5px 10px;
-    border-bottom: 2px solid transparent;
-    transition: border-color 0.3s;
-  }
-  
-  li:not(:last-child) {
-    margin-right: 20px; /* Add some space between the list items */
-  }
-  
-  /* Apply the underline and color when hovering over the links */
-  li a:hover {
-    border-color: #333;
-    color: #333;
-  }
-  
+  background-color: #9a9898; /* Set the background color */
+  padding: 10px; /* Add padding around the navigation bar */
+}
+
+/* Styling for the ul containing navigation items */
+ul {
+  list-style: none; /* Remove default list bullet points */
+  display: flex; /* Use flexbox to create a horizontal layout */
+  justify-content: flex-start; /* Align items to the start of the flex container */
+  padding: 0; /* Remove padding from the list */
+  margin: 0; /* Remove margin from the list */
+}
+
+/* Styling for each li in the navigation */
+li {
+  margin: 0; /* Reset margin for list items */
+}
+
+/* Styling for links within list items */
+li a {
+  text-decoration: none; /* Remove underlines from links */
+  color: #333; /* Set link text color */
+  padding: 5px 10px; /* Add padding around link text */
+  border-bottom: 2px solid transparent; /* Add a transparent bottom border for decoration */
+  transition: border-color 0.3s; /* Apply a smooth transition effect to border color changes */
+}
+
+/* Apply specific styling to list items that are not the last child */
+li:not(:last-child) {
+  margin-right: 20px; /* Add some space between the list items */
+}
+
+/* Styling when hovering over link items */
+li a:hover {
+  border-color: #333; /* Add a border color when hovering over links */
+  color: #333; /* Change link text color when hovering */
+}
