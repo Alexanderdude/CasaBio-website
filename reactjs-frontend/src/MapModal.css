@@ -1,0 +1,7 @@
+/* sets the leaflet map size to 60% of visible screen */
+.leaflet-container { 
+    height: 60vh;
+}
+
+
+
