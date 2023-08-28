@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Image } from 'react-bootstrap';
 import './UploadStep3.css';
 import MapModal from './MapModal';
+import AutocompleteGBIF from './AutocompleteGBIF';
 
 
 function UploadStep3() {
@@ -15,17 +16,33 @@ function UploadStep3() {
     const [selectedImageIndex, setSelectedImageIndex] = useState(null);
     const [selectedPhotographer, setSelectedPhotographer] = useState('');
     const [customPhotographer, setCustomPhotographer] = useState('');
-    const [showCustomPhotographerInput, setShowCustomPhotographerInput] = useState(false); const [selectedCollectorName, setSelectedCollectorName] = useState('');
+    const [showCustomPhotographerInput, setShowCustomPhotographerInput] = useState(false); 
+    const [selectedCollectorName, setSelectedCollectorName] = useState('');
     const [customCollectorName, setCustomCollectorName] = useState('');
     const [showCustomCollectorInput, setShowCustomCollectorInput] = useState(false);
+    const [selectedCollectionName, setSelectedCollectionName] = useState('');
+    const [customCollectionName, setCustomCollectionName] = useState('');
+    const [showCustomCollectionInput, setShowCustomCollectionInput] = useState(false);
     const [latitude, setLatitude] = useState('');
     const [longitude, setLongitude] = useState('');
     const [accuracy, setAccuracy] = useState('');
     const [showMapModal, setShowMapModal] = useState(false);
+    const [selectedScientificName, setSelectedScientificName] = useState('');
+
+    //sets scientific name for gbif
+  const handleUpdateScientificName = (scientificName) => {
+    setSelectedScientificName(scientificName);
+  };
 
     //function to show the map modal
     const handleMapModalOpen = () => {
-        setShowMapModal(true);
+
+        //if statement to make sure user selects an image
+        if (selectedImageIndex !== null) {
+            setShowMapModal(true);
+        } else {
+            alert('Please select an Image before clicking this button');
+        }
     };
 
     //function to close the map modal
@@ -82,6 +99,7 @@ function UploadStep3() {
 
     const collectors = ["Collector 1", "Collector 2"]; // Update with actual collector names
     const photographers = ["Testing John", "testing Jane"]; // Update with actual photographer names
+    const collections = ["collection1", "collection2"];//update with actual collections
 
     //function to handle image click and change
     const handleImageClick = (index) => {
@@ -137,6 +155,29 @@ function UploadStep3() {
     const handleCustomCollectorNameChange = (event) => {
         // Set the custom collector name value based on the input
         setCustomCollectorName(event.target.value);
+    };
+
+    // Function to handle changes in the selected collector name
+    const handleCollectionNameChange = (event) => {
+        // Get the selected value from the event
+        const value = event.target.value;
+        // Update the selected collector name state
+        setSelectedCollectionName(value);
+
+        // Check if the selected value is 'custom'
+        if (value === 'custom') {
+            // Show the custom collector input
+            setShowCustomCollectionInput(true);
+        } else {
+            // Hide the custom collector input
+            setShowCustomCollectionInput(false);
+        }
+    };
+
+    // Function to handle changes in the custom collector input
+    const handleCustomCollectionNameChange = (event) => {
+        // Set the custom collector name value based on the input
+        setCustomCollectionName(event.target.value);
     };
 
 
@@ -276,6 +317,46 @@ function UploadStep3() {
                         onChange={handleCustomCollectorNameChange}
                     />
                 </div>
+
+                {/* adds Collection Name with dropdown with all users previous collection names */}
+                <div className="input-group">
+                    <label htmlFor="collectionName">Collection Name:</label>
+                    <select
+                        id="collectionName"
+                        name="collectionName"
+                        value={selectedCollectionName}
+                        onChange={handleCollectionNameChange}
+                    >
+
+                        {/* maps out each collection name the user has used before */}
+                        {collections.map((collectionName) => (
+                            <option key={collectionName} value={collectionName.toLowerCase()}>
+                                {collectionName}
+                            </option>
+                        ))}
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+
+                {/* adds a new input box if the user selected the custom option */}
+                <div id="collectionCustom" style={{ display: showCustomCollectionInput ? 'block' : 'none' }}>
+                    <label htmlFor="collectionCustom-input">Enter new Collection name:</label>
+                    <input
+                        type="text"
+                        id="collectionCustom-input"
+                        value={customCollectionName}
+                        onChange={handleCustomCollectionNameChange}
+                    />
+                </div>
+
+                {/* Scientific name autosearch */}
+                <div>
+                    {/*<label htmlFor="sciName">Enter Scientific Name</label>
+                    <input type="text" id="sciName" name="sciName"/>*/}
+                    <AutocompleteGBIF onUpdateScientificName={handleUpdateScientificName} />
+
+                </div>
+
                 <hr />
 
                 {/* adds a new sub heading for the coordinates */}
