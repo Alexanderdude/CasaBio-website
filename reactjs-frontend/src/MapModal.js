@@ -1,6 +1,6 @@
 //import different Libraries and modules
-import React, { useState , useEffect} from 'react';
-import { Modal } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Modal, Button } from 'react-bootstrap';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle } from 'react-leaflet';
 import "leaflet/dist/leaflet.css";
 import './MapModal.css';
@@ -13,12 +13,23 @@ import axios from 'axios';
 //import marker icon from Leaflet 
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
 
-//define default variables positioned on Cape Town
-const defCenter = [-33.9249, 18.4241];
-const defZoom = 10;
 
 //create the MapModal function being used on UploadStep3
-function MapModal({ show, onClose, onUpdateLatLng, onHandleTowProCou }) {
+function MapModal({ show, onClose, longitudeInput, latitudeInput, accuracyInput, onUpdateLatLng, onHandleTowProCou }) {
+    
+    //define default variables positioned on Cape Town
+    const [defCenter, setDefCenter] = useState([-33.9249, 18.4241]);
+    const [defZoom, setDefZoom] = useState(10);
+    const [sliderValue, setSliderValue] = useState(1);
+      
+    useEffect(() => {
+        // Update defCenter only if longitudeInput and latitudeInput are not empty
+        if (longitudeInput !== '' && latitudeInput !== '') {
+            setDefCenter([latitudeInput, longitudeInput]);
+        }
+    }, [longitudeInput, latitudeInput]);
+
+
     //function to change the accuracy slider value
     const handleSliderChange = (event) => {
         //sets the slider value as the user slides the slider under the map container
@@ -37,8 +48,6 @@ function MapModal({ show, onClose, onUpdateLatLng, onHandleTowProCou }) {
         onHandleTowProCou(tow, pro, cou);
     };
 
-    // State for slider value
-    const [sliderValue, setSliderValue] = useState(1);
 
     return (
         <Modal show={show} onHide={onClose}>
@@ -58,7 +67,7 @@ function MapModal({ show, onClose, onUpdateLatLng, onHandleTowProCou }) {
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         /> {/* Adds the leaflet map to the map container */}
 
-                        <CustomMarker sliderValue={sliderValue} updateLatLng={updateLatLng} handleTowProCou={handleTowProCou}/>
+                        <CustomMarker sliderValue={sliderValue} updateLatLng={updateLatLng} handleTowProCou={handleTowProCou} />
                         {/* Adds the custom marker function to the Map container */}
 
                         <Search provider={new OpenStreetMapProvider()} />
@@ -80,13 +89,16 @@ function MapModal({ show, onClose, onUpdateLatLng, onHandleTowProCou }) {
                         <span className="slider-value">{sliderValue} m</span>
                     </div>
                 </div>
+                <Button onClick={onClose}>
+                    Submit
+                </Button>
             </Modal.Body>
         </Modal>
     );
 }
 
 //Custommarker function that displays the marker when a user clicks on the map
-function CustomMarker({ sliderValue, updateLatLng, handleTowProCou}) {
+function CustomMarker({ sliderValue, updateLatLng, handleTowProCou }) {
     const [markerPosition, setMarkerPosition] = useState(null);
     const [circleRadius, setCircleRadius] = useState(null);
 
@@ -106,25 +118,25 @@ function CustomMarker({ sliderValue, updateLatLng, handleTowProCou}) {
         if (markerPosition) {
             // Update latitude, longitude, and accuracy using parent component's function
             updateLatLng(markerPosition.lat, markerPosition.lng, sliderValue);
-    
+
             // Fetch address data using OpenStreetMap Nominatim API
             axios.get(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${markerPosition.lat}&lon=${markerPosition.lng}`)
-            .then(response => {
-                const { address } = response.data;
-    
-                // Call the parent component's function to update town, province, and country
-                handleTowProCou(
-                    address.city || address.town, // Use city if available, otherwise use town
-                    address.state, // Province or state
-                    address.country // Country
-                );
-            })
-            .catch(error => {
-                console.error('Error fetching address data:', error);
-            });
+                .then(response => {
+                    const { address } = response.data;
+
+                    // Call the parent component's function to update town, province, and country
+                    handleTowProCou(
+                        address.city || address.town, // Use city if available, otherwise use town
+                        address.state, // Province or state
+                        address.country // Country
+                    );
+                })
+                .catch(error => {
+                    console.error('Error fetching address data:', error);
+                });
         }
     }, [markerPosition, sliderValue, updateLatLng, handleTowProCou]);
-    
+
 
     //defines a new useEffect for the circle on slider change
     useEffect(() => {

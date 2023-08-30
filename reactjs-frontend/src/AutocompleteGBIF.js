@@ -4,7 +4,7 @@ import axios from 'axios';
 import './AutocompleteGBIF.css'; // Import your custom CSS file for styling
 
 //define the autocomplete component from form UploadStep3
-const AutocompleteGBIF = ({ onUpdateScientificName }) => {
+const AutocompleteGBIF = ({ onUpdateScientificName, onUpdateClassKing }) => {
 
     // State to store input value, suggestions, selected suggestion, and suggestion visibility
     const [inputValue, setInputValue] = useState('');
@@ -61,12 +61,11 @@ const AutocompleteGBIF = ({ onUpdateScientificName }) => {
             //gets different results and displays them in console ##TO BE CHANGES LATER
             if (detailedInfo.results && detailedInfo.results.length > 0) {
                 const firstResult = detailedInfo.results[0];
-                console.log('Class:', firstResult.class);
-                console.log('Family:', firstResult.family);
-                console.log('Genus:', firstResult.genus);
-                console.log('Kingdom:', firstResult.kingdom);
-                console.log('Order:', firstResult.order);
-                console.log('Phylum:', firstResult.phylum);
+                onUpdateClassKing(firstResult.class, firstResult.kingdom);
+                //console.log('Family:', firstResult.family);
+                //console.log('Genus:', firstResult.genus);
+                //console.log('Order:', firstResult.order);
+                //console.log('Phylum:', firstResult.phylum);
             }
         } catch (error) {
 
