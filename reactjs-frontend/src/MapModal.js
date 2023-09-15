@@ -1,5 +1,5 @@
 //import different Libraries and modules
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle } from 'react-leaflet';
 import "leaflet/dist/leaflet.css";
@@ -9,6 +9,7 @@ import L from 'leaflet';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet-geosearch/dist/geosearch.css';
 import axios from 'axios';
+import _ from 'lodash';
 
 //import marker icon from Leaflet 
 import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
@@ -102,26 +103,15 @@ function CustomMarker({ sliderValue, updateLatLng, handleTowProCou }) {
     const [markerPosition, setMarkerPosition] = useState(null);
     const [circleRadius, setCircleRadius] = useState(null);
 
-    //use the react-leaflet library to create a mapEvent
-    useMapEvents({
-        //declares that it is using an onClick event
-        click: (event) => {
-            //sets a variable for the clicked position
-            const clickedPosition = event.latlng;
-            //updates the markerPosition Variable
-            setMarkerPosition(clickedPosition);
-        }
-    });
-
-    useEffect(() => {
-        // Check if markerPosition is available
-        if (markerPosition) {
-            // Update latitude, longitude, and accuracy using parent component's function
-            updateLatLng(markerPosition.lat, markerPosition.lng, sliderValue);
-
+    // Create a memoized function for handleMarkerClick
+    const handleMarkerClick = useCallback(
+        _.throttle((clickedPosition) => {
             // Fetch address data using OpenStreetMap Nominatim API
-            axios.get(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${markerPosition.lat}&lon=${markerPosition.lng}`)
-                .then(response => {
+            axios
+                .get(
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${clickedPosition.lat}&lon=${clickedPosition.lng}`
+                )
+                .then((response) => {
                     const { address } = response.data;
 
                     // Call the parent component's function to update town, province, and country
@@ -131,21 +121,39 @@ function CustomMarker({ sliderValue, updateLatLng, handleTowProCou }) {
                         address.country // Country
                     );
                 })
-                .catch(error => {
+                .catch((error) => {
                     console.error('Error fetching address data:', error);
                 });
+        }, 2000), // Throttle for 2 seconds
+        [handleTowProCou]
+    );
+
+    // Use useMemo to create the throttled version of handleMarkerClick
+    const throttledHandleMarkerClick = useMemo(
+        () => _.throttle(handleMarkerClick, 2000),
+        [handleMarkerClick]
+    );
+
+    //use the react-leaflet library to create a mapEvent
+    useMapEvents({
+        //declares that it is using an onClick event
+        click: (event) => {
+            //sets a variable for the clicked position
+            const clickedPosition = event.latlng;
+            //updates the markerPosition Variable
+            setMarkerPosition(clickedPosition);
+            // Call throttled function to handle marker click
+            throttledHandleMarkerClick(clickedPosition);
         }
-    }, [markerPosition, sliderValue, updateLatLng, handleTowProCou]);
+    });
 
-
-    //defines a new useEffect for the circle on slider change
     useEffect(() => {
-        //if marker position is set
+        // Check if markerPosition is available
         if (markerPosition) {
-            //setCircle radius as the sliderValue
-            setCircleRadius(sliderValue);
+            // Update latitude, longitude, and accuracy using parent component's function
+            updateLatLng(markerPosition.lat, markerPosition.lng, sliderValue);
         }
-    }, [sliderValue, markerPosition]);
+    }, [markerPosition, sliderValue, updateLatLng]);
 
     //returns the markerPosition to the map container function
     return markerPosition ? (

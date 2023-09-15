@@ -4,13 +4,20 @@ import axios from 'axios';
 import './AutocompleteGBIF.css'; // Import your custom CSS file for styling
 
 //define the autocomplete component from form UploadStep3
-const AutocompleteGBIF = ({ onUpdateScientificName, onUpdateClassKing }) => {
+const AutocompleteGBIF = ({ onValueSet, onUpdateScientificName, onUpdateClassKing }) => {
 
     // State to store input value, suggestions, selected suggestion, and suggestion visibility
     const [inputValue, setInputValue] = useState('');
     const [suggestions, setSuggestions] = useState([]);
     const [selectedSuggestion, setSelectedSuggestion] = useState(null);
     const [showSuggestions, setShowSuggestions] = useState(false);
+
+    //useEffect to update inputvalue when the onValueSet changes
+    useEffect(() => {
+
+        setInputValue(onValueSet);
+
+    },[onValueSet]);
 
     // Effect to fetch suggestions from GBIF API based on input value
     useEffect(() => {
@@ -105,7 +112,7 @@ const AutocompleteGBIF = ({ onUpdateScientificName, onUpdateClassKing }) => {
                     type="text"
                     id="sciName"
                     name="sciName"
-                    value={inputValue}
+                    value={inputValue || ''}
                     onChange={(e) => setInputValue(e.target.value)}
                     onFocus={handleInputFocus}
                     onBlur={handleInputBlur}
