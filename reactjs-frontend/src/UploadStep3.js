@@ -10,17 +10,20 @@ import AutocompleteGBIF from './AutocompleteGBIF';
 function UploadStep3() {
 
     //define different variables
+    const [collectors, setCollectors] = useState(["Collector 1", "Collector 2"]);
+    const [photographers, setPhotographers] = useState(["Testing John", "testing Jane"]);
+    const [collections, setCollections] = useState(["collection1", "collection2"]);
 
     const location = useLocation();
     const [imageData, setImageData] = useState([]);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const [selectedPhotographer, setSelectedPhotographer] = useState('');
+    const [selectedPhotographer, setSelectedPhotographer] = useState(photographers[0]);
     const [customPhotographer, setCustomPhotographer] = useState('');
     const [showCustomPhotographerInput, setShowCustomPhotographerInput] = useState(false);
-    const [selectedCollectorName, setSelectedCollectorName] = useState('');
+    const [selectedCollectorName, setSelectedCollectorName] = useState(collectors[0]);
     const [customCollectorName, setCustomCollectorName] = useState('');
     const [showCustomCollectorInput, setShowCustomCollectorInput] = useState(false);
-    const [selectedCollectionName, setSelectedCollectionName] = useState('');
+    const [selectedCollectionName, setSelectedCollectionName] = useState(collections[0]);
     const [customCollectionName, setCustomCollectionName] = useState('');
     const [showCustomCollectionInput, setShowCustomCollectionInput] = useState(false);
     const [latitude, setLatitude] = useState('');
@@ -28,9 +31,13 @@ function UploadStep3() {
     const [accuracy, setAccuracy] = useState('');
     const [showMapModal, setShowMapModal] = useState(false);
     const [selectedScientificName, setSelectedScientificName] = useState('');
-    const [latitudeInput, setLatitudeInput] = useState('');
-    const [longitudeInput, setLongitudeInput] = useState('');
-    const [accuracyInput, setAccuracyInput] = useState('');
+    const [taxonInput, setTaxonInput] = useState(null);
+    const [kingdomInput, setKingdomInput] = useState(null);
+    const [inputDate, setInputDate] = useState(null);
+    const [countryInput, setCountryInput] = useState(null);
+    const [provinceInput, setProvinceInput] = useState(null);
+    const [cityInput, setCityInput] = useState(null);
+    const [preciseInput, setPreciseInput] = useState(null);
 
     //sets scientific name for gbif
     const handleUpdateScientificName = (scientificName) => {
@@ -40,8 +47,8 @@ function UploadStep3() {
     //sets Class and kingdom from gbif
     const handleClassKing = (classValue, kingdomValue) => {
 
-        imageData[selectedImageIndex].taxon = classValue;
-        imageData[selectedImageIndex].kingdom = kingdomValue;
+        setTaxonInput(classValue);
+        setKingdomInput(kingdomValue);
     };
 
     //function to show the map modal
@@ -65,38 +72,13 @@ function UploadStep3() {
         setLatitude(lat);
         setLongitude(lng);
         setAccuracy(acc);
-
-        // Update the longitude input field's value
-        const longInput = document.getElementById('longNumber');
-        if (longInput) {
-            longInput.value = lng; // Set the value
-        }
-
-        // Update the Latitude input field's value
-        const latInput = document.getElementById('latNumber');
-        if (latInput) {
-            latInput.value = lat; // Set the value
-        }
     };
 
+    //function to update town,province and country values
     const handleTowProCou = (tow, pro, cou) => {
-        // Update the town input field's value
-        const townInput = document.getElementById('minLoc');
-        if (townInput) {
-            townInput.value = tow; // Set the value
-        }
-
-        // Update the province input field's value
-        const provinceInput = document.getElementById('locPro');
-        if (provinceInput) {
-            provinceInput.value = pro; // Set the value
-        }
-
-        // Update the country input field's value
-        const countryInput = document.getElementById('locCount');
-        if (countryInput) {
-            countryInput.value = cou; // Set the value
-        }
+        setCityInput(tow); // Set the value
+        setProvinceInput(pro); // Set the value
+        setCountryInput(cou); // Set the value
     };
 
     //useEffect to recieve the values from previous form and sets additional values to the array
@@ -124,15 +106,11 @@ function UploadStep3() {
         }
     }, [location.state]);
 
-    const collectors = ["Collector 1", "Collector 2"]; // Update with actual collector names
-    const photographers = ["Testing John", "testing Jane"]; // Update with actual photographer names
-    const collections = ["collection1", "collection2"];//update with actual collections
 
     const handleImageClick = (index) => {
         if (selectedImageIndex !== index) {
             setSelectedImageIndex(index); // Select the image
             handleImageClickData(index);
-            console.log(imageData);
         }
     };
 
@@ -156,20 +134,25 @@ function UploadStep3() {
     const handleImageClickData = (index) => {
         const selectedImage = imageData[index];
 
-        setSelectedPhotographer(selectedImage.photographer || '');
-        setSelectedCollectorName(selectedImage.collector || '');
-        setSelectedCollectionName(selectedImage.collection || '');
+        setSelectedPhotographer(selectedImage.photographer || photographers[0]);
+        setSelectedCollectorName(selectedImage.collector || collectors[0]);
+        setSelectedCollectionName(selectedImage.collection || collections[0]);
         setSelectedScientificName(selectedImage.sciName || '');
         setLatitude(selectedImage.latitude || '');
         setLongitude(selectedImage.longitude || '');
         setAccuracy(selectedImage.accuracy || '');
-        document.getElementById('imageDate').value = selectedImage.date || '';
-        document.getElementById('locCount').value = selectedImage.country || '';
-        document.getElementById('locPro').value = selectedImage.province || '';
-        document.getElementById('minLoc').value = selectedImage.city || '';
-        document.getElementById('preLoc').value = selectedImage.preciseLocality || '';
+        setInputDate(selectedImage.date || '');
+        setCountryInput(selectedImage.country || '');
+        setProvinceInput(selectedImage.province || '');
+        setCityInput(selectedImage.city || '');
+        setPreciseInput(selectedImage.preciseLocality || '');
+        setShowCustomCollectionInput(false);
+        setShowCustomCollectorInput(false);
+        setShowCustomPhotographerInput(false);
+        setCustomCollectionName('');
+        setCustomCollectorName('');
+        setCustomPhotographer('');
     };
-
 
     const handleSaveInformation = (index) => {
         const updatedImageData = [...imageData];
@@ -179,14 +162,34 @@ function UploadStep3() {
         selectedImage.collector = selectedCollectorName || '';
         selectedImage.collection = selectedCollectionName || '';
         selectedImage.sciName = selectedScientificName || '';
+        selectedImage.taxon = taxonInput || '';
+        selectedImage.kingdom = kingdomInput || '';
         selectedImage.latitude = latitude || '';
         selectedImage.longitude = longitude || '';
         selectedImage.accuracy = accuracy || '';
-        selectedImage.date = document.getElementById('imageDate').value || '';
-        selectedImage.country = document.getElementById('locCount').value || '';
-        selectedImage.province = document.getElementById('locPro').value || '';
-        selectedImage.city = document.getElementById('minLoc').value || '';
-        selectedImage.preciseLocality = document.getElementById('preLoc').value || '';
+        selectedImage.date = inputDate || '';
+        selectedImage.country = countryInput || '';
+        selectedImage.province = provinceInput || '';
+        selectedImage.city = cityInput || '';
+        selectedImage.preciseLocality = preciseInput || '';
+
+        // Check if a custom name was entered and update the respective array
+        if (showCustomPhotographerInput) {
+            const updatedPhotographers = [...photographers, selectedPhotographer];
+            setPhotographers(updatedPhotographers);
+        }
+
+        //adds custom option to the array of collectors
+        if (showCustomCollectorInput) {
+            const updatedCollectors = [...collectors, selectedCollectorName];
+            setCollectors(updatedCollectors);
+        }
+
+        //adds custom collection to array of collections
+        if (showCustomCollectionInput) {
+            const updatedCollections = [...collections, selectedCollectionName];
+            setCollections(updatedCollections);
+        }
 
         setImageData(updatedImageData);
     };
@@ -195,7 +198,9 @@ function UploadStep3() {
     // Function to handle changes in the custom photographer input
     const handleCustomPhotographerChange = (event) => {
         // Set the custom photographer value based on the input
-        setCustomPhotographer(event.target.value);
+        const newCustomPhotographer = event.target.value;
+        setCustomPhotographer(newCustomPhotographer);
+        setSelectedPhotographer(newCustomPhotographer);
     };
 
     // Function to handle changes in the selected collector name
@@ -218,7 +223,10 @@ function UploadStep3() {
     // Function to handle changes in the custom collector input
     const handleCustomCollectorNameChange = (event) => {
         // Set the custom collector name value based on the input
-        setCustomCollectorName(event.target.value);
+        const newCustomCollectors = event.target.value;
+        setCustomCollectorName(newCustomCollectors);
+        setSelectedCollectorName(newCustomCollectors);
+
     };
 
     // Function to handle changes in the selected collector name
@@ -241,7 +249,76 @@ function UploadStep3() {
     // Function to handle changes in the custom collector input
     const handleCustomCollectionNameChange = (event) => {
         // Set the custom collector name value based on the input
-        setCustomCollectionName(event.target.value);
+        const newCustomCollection = event.target.value;
+        setCustomCollectionName(newCustomCollection);
+        setSelectedCollectionName(newCustomCollection);
+
+    };
+
+    // Function to check all data has been submitted between all images and uploads
+    const handleCheckUpload = () => {
+        let missingFields = [];
+
+        // Iterate through the imageData array
+        for (let i = 0; i < imageData.length; i++) {
+            const image = imageData[i];
+
+            // Check if any of the required fields are null (excluding extraImages)
+            if (
+                !image.photographer ||
+                !image.collector ||
+                !image.collection ||
+                !image.date ||
+                !image.latitude ||
+                !image.longitude ||
+                !image.accuracy ||
+                !image.country ||
+                !image.province ||
+                !image.city ||
+                !image.preciseLocality ||
+                !image.sciName ||
+                !image.taxon ||
+                !image.kingdom
+            ) {
+                missingFields.push(`Image ${i + 1}`);
+            }
+        }
+
+        // Check if any missing fields were found
+        if (missingFields.length > 0) {
+            const missingFieldsMsg = missingFields.join(', ');
+            alert(`Please fill in all required fields for ${missingFieldsMsg}.`);
+            console.log(imageData);
+        } else {
+            console.log('imageUploading');
+            sendImageDataToBackend();
+        }
+    };
+
+    // Function to send the array to the backend
+    const sendImageDataToBackend = async () => {
+        try {
+            // Send a POST request to the '/information' endpoint with the imageData
+            const response = await fetch('/information', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(imageData), // Use lowercase 'imageData' here, assuming it's your array of data
+            });
+
+            // Check if the response status is okay (e.g., 200)
+            if (response.ok) {
+                // Handle success: Log a message indicating success
+                console.log('Information array sent successfully');
+            } else {
+                // Handle error: Log the status text from the response
+                console.error('Error:', response.statusText);
+            }
+        } catch (error) {
+            // Handle exceptions that may occur during the fetch request, e.g., network issues
+            console.error('Error:', error);
+        }
     };
 
 
@@ -349,7 +426,7 @@ function UploadStep3() {
                 {/* adds a group that allows the user to display a date ###SET A DEFAULT DATE SO USERS KNOW WHAT FORMAT TO USE### */}
                 <div className="input-group">
                     <label htmlFor="imageDate">Date:</label>
-                    <input type="text" id="imageDate" name="imageDate" />
+                    <input type="text" id="imageDate" name="imageDate" placeholder='DD/MM/YYYY' onChange={(e) => setInputDate(e.target.value)} value={inputDate || ''} />
                 </div>
 
                 {/* displays a drop down fro the collectors name  */}
@@ -417,8 +494,7 @@ function UploadStep3() {
                 {/* Scientific name autosearch */}
                 <div>
 
-                    <AutocompleteGBIF onUpdateScientificName={handleUpdateScientificName} onUpdateClassKing={handleClassKing} />
-
+                    <AutocompleteGBIF onValueSet={selectedScientificName} onUpdateScientificName={handleUpdateScientificName} onUpdateClassKing={handleClassKing} />
                 </div>
 
                 <hr />
@@ -429,20 +505,15 @@ function UploadStep3() {
                 {/* latitude input-group */}
                 <div className="input-group">
                     <label htmlFor="latNumber">Latitude:</label>
-                    <input type="text" id="latNumber" name="latNumber" value={latitude || ''}/>
+                    <input type="text" id="latNumber" name="latNumber" value={latitude || ''} onChange={(e) => setLatitude(e.target.value)} />
                 </div>
 
                 {/* longitude input-group */}
                 <div className="input-group">
                     <label htmlFor="longNumber">Longitude:</label>
-                    <input type="text" id="longNumber" name="longNumber" value={longitude || ''} />
+                    <input type="text" id="longNumber" name="longNumber" value={longitude || ''} onChange={(e) => setLongitude(e.target.value)} />
                 </div>
 
-                {/* Altitude input-group */}
-                <div className="input-group">
-                    <label htmlFor="altNumber">Altitude:</label>
-                    <input type="text" id="altNumber" name="altNumber" />
-                </div>
                 <hr />
 
                 {/* adds a new sub heading for the Locality */}
@@ -451,25 +522,25 @@ function UploadStep3() {
                 {/* Country input-group */}
                 <div className="input-group">
                     <label htmlFor="locCount">Country:</label>
-                    <input type="text" id="locCount" name="locCount" />
+                    <input type="text" id="locCount" name="locCount" value={countryInput || ''} onChange={(e) => setCountryInput(e.target.value)} />
                 </div>
 
                 {/* Province input-group */}
                 <div className="input-group">
                     <label htmlFor="locPro">Province:</label>
-                    <input type="text" id="locPro" name="locPro" />
+                    <input type="text" id="locPro" name="locPro" value={provinceInput || ''} onChange={(e) => setProvinceInput(e.target.value)} />
                 </div>
 
                 {/* minor locality input-group */}
                 <div className="input-group">
                     <label htmlFor="minLoc">City/Town:</label>
-                    <input type="text" id="minLoc" name="minLoc" />
+                    <input type="text" id="minLoc" name="minLoc" value={cityInput || ''} onChange={(e) => setCityInput(e.target.value)} />
                 </div>
 
                 {/* precise locality input-group */}
                 <div className="input-group">
                     <label htmlFor="preLoc">Precise Locality:</label>
-                    <input type="text" id="preLoc" name="preLoc" />
+                    <input type="text" id="preLoc" name="preLoc" value={preciseInput || ''} onChange={(e) => setPreciseInput(e.target.value)} />
                 </div>
 
                 {/* save data for selected image button */}
@@ -479,7 +550,7 @@ function UploadStep3() {
                 <br />
 
                 {/* this button is used to check all data and submit it to the database */}
-                <button>finalise</button>
+                <button onClick={handleCheckUpload}>finalise</button>
             </div>
         </div >
     );
