@@ -173,38 +173,42 @@ def my_profile():
     return response_body
 
 
-# Create a /register api point for adding users
 @app.route('/register', methods=["POST"])
 def register_user():
-    # Get user data from the JSON request data
     user_data = request.json
 
     # Ensure that the required fields are present in the request data
     if 'username' not in user_data or 'email' not in user_data or 'password' not in user_data:
-        return {"msg": "Incomplete user data"}, 400
+        return jsonify({"msg": "Incomplete user data"}), 400  # Return a 400 (Bad Request) status code
 
     # Check if the username already exists in the database
     for doc_id in signInDB:
         doc = signInDB[doc_id]
-        #check if username is equal to a username in the database
         if 'username' in doc and doc['username'] == user_data['username']:
-            return {"msg": "Username already exists"}, 400
-        
+            return jsonify({"msg": "Username already exists"}), 409  # Return a 409 (Conflict) status code
+
     # Check if the email already exists in the database
     for doc_id in signInDB:
         doc = signInDB[doc_id]
-        #check if email is equal to a email in the database
         if 'email' in doc and doc['email'] == user_data['email']:
-            return {"msg": "Email already exists"}, 400
+            return jsonify({"msg": "Email already exists"}), 409  # Return a 409 (Conflict) status code
 
-    # Add the new user data to the database
-    new_user_id = signInDB.save(user_data)
+    # Add the new user data to the database with an auto-generated document ID
+    new_user_data = {
+        "username": user_data['username'],
+        "email": user_data['email'],
+        "password": user_data['password'],
+        "securityQuestion": user_data['securityQuestion']
+    }
+    
+    doc_id, _ = signInDB.save(new_user_data)  # Save the document and get the generated document ID
 
     # Generate an access token for the new user
     access_token = create_access_token(identity=user_data['username'])
-    response = {"access_token": access_token, "user_id": new_user_id}
+    response = {"access_token": access_token, "user_id": doc_id}
     
-    return response, 201  # Return a 201 (Created) status code
+    return jsonify(response), 201  # Return a 201 (Created) status code
+
 
 
 # Start the Flask application if this script is run directly
