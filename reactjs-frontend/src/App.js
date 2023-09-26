@@ -11,6 +11,7 @@ import UploadStep3 from './UploadStep3';
 import useToken from './useToken';
 import Login from './Login';
 import Profile from './Profile';
+import Browser from './Browser';
 
 // Define the main App component
 const App = () => {
@@ -33,6 +34,7 @@ const App = () => {
         <Route path="/upload" element={<UploadStep1 />} />
         <Route path="/uploadStep2" element={<UploadStep2 />} />
         <Route path="/uploadStep3" element={<UploadStep3 />} />
+        <Route path="/browse" element={<Browser />}/>
       </Routes>
     </div>
   );

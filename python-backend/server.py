@@ -209,7 +209,74 @@ def register_user():
     
     return jsonify(response), 201  # Return a 201 (Created) status code
 
+@app.route('/search', methods=['POST'])
+def search_database():
+    try:
+        # Get the search criteria and pagination parameters from the request data
+        search_criteria = request.json
+        page = search_criteria['page']
+        per_page = search_criteria['per_page']
 
+        # Extract the search criteria from the dictionary
+        primary_searchTerm = search_criteria['primaryTerm']
+        primary_searchType = search_criteria['primaryType']
+        filter_searchTerm = search_criteria['filterTerm']
+        filter_searchType = search_criteria['filterType']
+
+        # Calculate the start and end index for pagination
+        start_idx = (page - 1) * per_page
+
+        # Check if primary_searchTerm is not provided
+        if primary_searchTerm == '':
+
+            #create a new blank variable
+            results_blank=[]
+
+            # retrieve from all documents in couchDB between the pagination values
+            primary_results = informationDB.view('_all_docs', include_docs=True, skip=start_idx, limit=per_page)
+            
+            # Cycle through the documents and save it to a variable
+            results_blank=[row.doc for row in primary_results]
+
+            #return values
+            return jsonify(results_blank), 200
+        
+        # Checks if filter term is blank
+        if filter_searchTerm == '':
+
+            # create a blank variable
+            results=[]
+
+            #cycles through each document with specific primary search fields and values
+            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm}}):
+                
+                # adds each doc to the variable
+                results.append(doc)
+
+            #returns the new variable
+            return jsonify(results), 200
+
+        # If there are filter search criteria, narrow down the results
+        if filter_searchTerm != '':
+
+            #creates a blank filter variable
+            results_filter=[]
+
+            #cycles through each document with a specific primary and filter field and value
+            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm, filter_searchType:filter_searchTerm}}):
+                
+                # adds the values to the variable
+                results_filter.append(doc)
+
+            #returns the variable 
+            return jsonify(results_filter), 200
+            
+        
+
+    except Exception as e:
+        # Handle any errors
+        print("Error:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 # Start the Flask application if this script is run directly
 if __name__ == "__main__":

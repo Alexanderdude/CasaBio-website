@@ -2,9 +2,18 @@
 import { useState } from 'react';
 import axios from "axios";
 import { useNavigate } from 'react-router-dom';
+import ReCAPTCHA from "react-google-recaptcha";
 import './Login.css'; // Import the CSS file
 
 function Login(props) {
+
+  // State for reCAPTCHA
+  const [recaptchaValue, setRecaptchaValue] = useState(null);
+
+  // reCAPTCHA onChange handler
+  function handleRecaptchaChange(value) {
+    setRecaptchaValue(value);
+  }
 
   //sets the useState for the login details as blank strings
   const [loginForm, setloginForm] = useState({
@@ -20,6 +29,12 @@ function Login(props) {
 
   //defines the dunction logMeIn
   function logMeIn(event) {
+
+    // Check if reCAPTCHA is solved
+    if (!recaptchaValue) {
+      alert("Please complete the reCAPTCHA.");
+      return;
+    }
 
     //sends a POST request to the /token api using axios
     axios({
@@ -38,7 +53,7 @@ function Login(props) {
         props.setToken(response.data.access_token)
         navigate('/profile');
 
-        //if unseccessful then display error messages
+      //if unseccessful then display error messages
       }).catch((error) => {
         if (error.response) {
           console.log(error.response)
@@ -77,6 +92,13 @@ function Login(props) {
 
   function registerUser(event) {
     event.preventDefault();
+
+    // Check if reCAPTCHA is solved
+    if (!recaptchaValue) {
+      alert("Please complete the reCAPTCHA.");
+      return;
+    }
+
     // Check if password and confirm password match
     if (loginForm.password !== loginForm.confirmPassword) {
       alert("Password and Confirm Password must match.");
@@ -237,18 +259,26 @@ function Login(props) {
 
               {/* Question Input field */}
               <label htmlFor="securityQuestion">What is your reason for joining CASABIO:</label>
-              <input
-                //Settings for the input box
+              {/* Use a textarea for securityQuestion */}
+              <textarea
                 onChange={handleChange}
-                type="text"
                 name="securityQuestion"
                 id="securityQuestion"
-                placeholder="answer"
+                placeholder="Answer"
                 value={loginForm.securityQuestion}
+                rows={5} 
               />
             </div>
           </>
         )}
+
+        {/* reCAPTCHA */}
+          <div className="form-group">
+            <ReCAPTCHA
+              sitekey="YOUR_RECAPTCHA_SITE_KEY"  //CHANGE WITH REAL KEY LATER STAGE
+              onChange={handleRecaptchaChange}
+            />
+          </div>
 
         {/* Adds a button that has multiple functions if user is registering or not */}
         <button onClick={isRegistering ? registerUser : logMeIn}>
