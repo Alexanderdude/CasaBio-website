@@ -48,7 +48,7 @@ const Nav = (props) => {
 
         </li>
         <li>
-          <Link to="/browser" className={styles.link}>Browser</Link>
+          <Link to="/browse" className={styles.link}>Browser</Link>
           {/* adds a clickable link that navigates to the Browser Page */}
           
         </li>

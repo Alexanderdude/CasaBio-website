@@ -5,25 +5,136 @@ import { Container, Row, Col, Image } from 'react-bootstrap';
 import './UploadStep3.css';
 import MapModal from './MapModal';
 import AutocompleteGBIF from './AutocompleteGBIF';
+import axios from "axios"
+import { v4 as uuidv4 } from 'uuid';
 
 
-function UploadStep3() {
+
+function UploadStep3(props) {
+
+    const { token, setToken } = props; // Destructure the specific props you need
+    const [username, setUsername] = useState(null);
+
+    useEffect(() => {
+        const getUsername = async () => {
+            try {
+                // Use axios to send a GET request at /profile
+                const response = await axios.get('/profile', {
+                    headers: {
+                        Authorization: 'Bearer ' + token // Use the destructured token here
+                    }
+                });
+
+                const res = response.data;
+
+                // Check if 'access_token' exists in the response and update the token if available
+                if (res.access_token) {
+                    setToken(res.access_token); // Use the destructured setToken here
+                }
+
+                // Set the username based on the response (profile name)
+                setUsername(res.name);
+            } catch (error) {
+                if (error.response) {
+                    console.log(error.response);
+                    console.log(error.response.status);
+                    console.log(error.response.headers);
+                }
+            }
+        };
+
+        // Call getUsername when the component mounts (app starts)
+        getUsername();
+    }, [token, setToken]);
 
     //define different variables
-    const [collectors, setCollectors] = useState(["Collector 1", "Collector 2"]);
-    const [photographers, setPhotographers] = useState(["Testing John", "testing Jane"]);
-    const [collections, setCollections] = useState(["collection1", "collection2"]);
+    const [collectors, setCollectors] = useState([]);
+    const [photographers, setPhotographers] = useState([]);
+    const [collections, setCollections] = useState([]);
+    const [selectedCollectorName, setSelectedCollectorName] = useState(collectors[0]);
+    const [selectedCollectionName, setSelectedCollectionName] = useState(collections[0]);
+    const [selectedPhotographer, setSelectedPhotographer] = useState(photographers[0]);
+    // Function to fetch data from the server based on the username
+    useEffect(() => {
+        // Create a JSON object with the username
+        const requestData = { 'username': username };
+
+        const fetchData = async () => {
+            try {
+                // Make a GET request to your API endpoint with the username
+                const response = await fetch('/informationStep3', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData), // send username 
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Data:', data); // Log the data for debugging
+                    // Update state variables with the retrieved data
+                    if (data.collectors) {
+                        setCollectors(data.collectors);
+                    }
+                    if (data.photographers) {
+                        setPhotographers(data.photographers);
+                    }
+                    if (data.collections) {
+                        setCollections(data.collections);
+                    }
+                } else {
+                    console.error('Error fetching data:', response.statusText);
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+
+        // Call fetchData when the component mounts or when the username changes
+        fetchData();
+    }, [username]);
+
+    // Add a new useEffect to watch for changes in 'collections'
+    useEffect(() => {
+        // Check if 'collections' has data and set 'selectedCollectionName' accordingly
+        if (collections.length > 0) {
+            setSelectedCollectionName(collections[0]); // For example, set it to the first collection in the list
+        }
+    }, [collections]);
+
+    // Add a new useEffect to watch for changes in 'collectors'
+    useEffect(() => {
+        // Check if 'collections' has data and set 'selectedCollectorName' accordingly
+        if (collectors.length > 0) {
+            setSelectedCollectorName(collectors[0]); // set to the first value
+        }
+    }, [collectors]);
+
+    // Add a new useEffect to watch for changes in 'collections'
+    useEffect(() => {
+        // Check if 'collections' has data and set 'selectedCollectionName' accordingly
+        if (collections.length > 0) {
+            setSelectedCollectionName(collections[0]); // set to first value
+        }
+    }, [collections]);
+
+    // Add a new useEffect to watch for changes in 'photographers'
+    useEffect(() => {
+        // Check if 'collections' has data and set 'selectedPhotographer' accordingly
+        if (photographers.length > 0) {
+            setSelectedPhotographer(photographers[0]); // set to the first value
+        }
+    }, [photographers]);
+
 
     const location = useLocation();
     const [imageData, setImageData] = useState([]);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const [selectedPhotographer, setSelectedPhotographer] = useState(photographers[0]);
     const [customPhotographer, setCustomPhotographer] = useState('');
     const [showCustomPhotographerInput, setShowCustomPhotographerInput] = useState(false);
-    const [selectedCollectorName, setSelectedCollectorName] = useState(collectors[0]);
     const [customCollectorName, setCustomCollectorName] = useState('');
     const [showCustomCollectorInput, setShowCustomCollectorInput] = useState(false);
-    const [selectedCollectionName, setSelectedCollectionName] = useState(collections[0]);
     const [customCollectionName, setCustomCollectionName] = useState('');
     const [showCustomCollectionInput, setShowCustomCollectionInput] = useState(false);
     const [latitude, setLatitude] = useState('');
@@ -38,6 +149,7 @@ function UploadStep3() {
     const [provinceInput, setProvinceInput] = useState(null);
     const [cityInput, setCityInput] = useState(null);
     const [preciseInput, setPreciseInput] = useState(null);
+
 
     //sets scientific name for gbif
     const handleUpdateScientificName = (scientificName) => {
@@ -100,6 +212,8 @@ function UploadStep3() {
                 sciName: null,
                 taxon: null,
                 kingdom: null,
+                mainImageID: [],
+                extraImageID: [],
 
             }));
             setImageData(modifiedImageData);
@@ -154,20 +268,30 @@ function UploadStep3() {
         setCustomPhotographer('');
     };
 
-    const handleSaveInformation = (index) => {
+    const handleSaveInformation = async (index) => {
         const updatedImageData = [...imageData];
         const selectedImage = updatedImageData[index];
 
-        selectedImage.photographer = selectedPhotographer || '';
-        selectedImage.collector = selectedCollectorName || '';
-        selectedImage.collection = selectedCollectionName || '';
+        // Check if the selected photographer is "Custom" and use customPhotographer if true
+        selectedImage.photographer = selectedPhotographer === 'custom' ? customPhotographer : selectedPhotographer || '';
+
+        // Check if the selected collector is "Custom" and use customCollectorName if true
+        selectedImage.collector = selectedCollectorName === 'custom' ? customCollectorName : selectedCollectorName || '';
+
+        // Check if the selected collection is "Custom" and use customCollectionName if true
+        selectedImage.collection = selectedCollectionName === 'custom' ? customCollectionName : selectedCollectionName || '';
         selectedImage.sciName = selectedScientificName || '';
         selectedImage.taxon = taxonInput || '';
         selectedImage.kingdom = kingdomInput || '';
         selectedImage.latitude = latitude || '';
         selectedImage.longitude = longitude || '';
         selectedImage.accuracy = accuracy || '';
-        selectedImage.date = inputDate || '';
+        // Check if the inputDate matches the DD/MM/YYYY format
+        const datePattern = /^\d{2}\/\d{2}\/\d{4}$/;
+        if (inputDate && !datePattern.test(inputDate)) {
+            alert('Please enter a valid date in DD/MM/YYYY format.');
+            return; // Exit the function if the date format is invalid
+        }
         selectedImage.country = countryInput || '';
         selectedImage.province = provinceInput || '';
         selectedImage.city = cityInput || '';
@@ -192,6 +316,7 @@ function UploadStep3() {
         }
 
         setImageData(updatedImageData);
+        alert('The selected image has been saved successfully. You can click the finalise button to continue.')
     };
 
 
@@ -200,7 +325,6 @@ function UploadStep3() {
         // Set the custom photographer value based on the input
         const newCustomPhotographer = event.target.value;
         setCustomPhotographer(newCustomPhotographer);
-        setSelectedPhotographer(newCustomPhotographer);
     };
 
     // Function to handle changes in the selected collector name
@@ -225,7 +349,6 @@ function UploadStep3() {
         // Set the custom collector name value based on the input
         const newCustomCollectors = event.target.value;
         setCustomCollectorName(newCustomCollectors);
-        setSelectedCollectorName(newCustomCollectors);
 
     };
 
@@ -251,7 +374,6 @@ function UploadStep3() {
         // Set the custom collector name value based on the input
         const newCustomCollection = event.target.value;
         setCustomCollectionName(newCustomCollection);
-        setSelectedCollectionName(newCustomCollection);
 
     };
 
@@ -276,9 +398,7 @@ function UploadStep3() {
                 !image.province ||
                 !image.city ||
                 !image.preciseLocality ||
-                !image.sciName ||
-                !image.taxon ||
-                !image.kingdom
+                !image.sciName
             ) {
                 missingFields.push(`Image ${i + 1}`);
             }
@@ -291,10 +411,47 @@ function UploadStep3() {
             console.log(imageData);
         } else {
             console.log('imageUploading');
-            sendImageDataToBackend();
+            preRequest();
         }
     };
 
+    // Function to handle the final step before sending images to backend
+    const preRequest = () => {
+        const updatedImageData = [...imageData]; // Create a copy of imageData
+        const updatedImagesArray = []; // Create an array to store updated image data
+
+        // Loop through each image in updatedImageData
+        for (let i = 0; i < updatedImageData.length; i++) {
+            const idImage = uuidv4(); // Generate a unique ID for the main image
+            updatedImageData[i].mainImageID = idImage; // Assign the ID to the main image
+
+            // Get the extra images for the current image (or an empty array if none)
+            const extraImages = updatedImageData[i]?.extraImage ?? [];
+
+            // Generate unique IDs for each extra image using map
+            const extraImageIDs = extraImages.map(() => uuidv4());
+
+            // Assign the array of unique extra image IDs to the current image
+            updatedImageData[i].extraImageID = extraImageIDs;
+
+            // Create an object with the main image and extra images along with their IDs
+            updatedImagesArray.push({
+                mainImageID: idImage,
+                mainImage: updatedImageData[i].mainImage,
+                extraImage: updatedImageData[i].extraImage,
+                extraImageID: extraImageIDs, // Assign the array of unique IDs to extraImageID
+            });
+        }
+
+        // Update the state with the updatedImageData
+        setImageData(updatedImageData);
+
+        console.log('preRequest successful');
+
+        sendImageDataToBackend();
+    };
+
+    
     // Function to send the array to the backend
     const sendImageDataToBackend = async () => {
         try {
@@ -391,7 +548,7 @@ function UploadStep3() {
                 <h1>Basic Info</h1>
 
                 {/* adds the user name here */}
-                <p id="userName">User name: Testing John</p>
+                <p id="username">User name: {username}</p>
 
                 {/* adds a dropdown for the photographer name */}
                 <label htmlFor="namesDropdown">Photographer Name:</label>
