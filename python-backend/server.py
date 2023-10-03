@@ -5,6 +5,19 @@ from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
                                unset_jwt_cookies, jwt_required, JWTManager
 import json
 import couchdb
+import os
+from PIL import Image
+from io import BytesIO
+import base64
+
+# get the current directory of the python app
+current_directory = os.getcwd()
+
+# Define the save_path
+images_directory = os.path.join(current_directory, 'Images')
+
+if not os.path.exists(images_directory):
+    os.makedirs(images_directory)
 
 #connect to couchDB server(change location to actual server)
 couch = couchdb.Server("http://localhost:5984")
@@ -72,6 +85,63 @@ def refresh_expiring_jwts(response):
     except (RuntimeError, KeyError):
         # Case where there is not a valid JWT. Just return the original respone
         return response
+    
+#create an API that receives information required for the uploadStep3 page
+@app.route('/informationStep3', methods=['POST'])
+def recieve_information_data():
+    requested_data = request.get_json()
+    username = requested_data['username']
+    # Initialize lists to hold unique collectors, collections, and photographers
+    unique_collectors = []
+    unique_collections = []
+    unique_photographers = []
+
+    # Query the CouchDB database for documents with the specified username
+    for doc in informationDB.find({'selector': {'username': username}}):
+        collectors = doc['collectors']
+        collections = doc['collections']
+        photographers = doc['photographers']
+
+        # Add unique collectors to the list
+        if collectors not in unique_collectors:
+            unique_collectors.append(collectors)
+
+        # Add unique collections to the list
+        if collections not in unique_collections:
+            unique_collections.append(collections)
+
+        # Add unique photographers to the list
+        if photographers not in unique_photographers:
+            unique_photographers.append(photographers)
+
+    # Create a dictionary to hold the unique data
+    unique_data = {
+        "collectors": unique_collectors,
+        "collections": unique_collections,
+        "photographers": unique_photographers
+    }
+
+    return jsonify(unique_data), 200
+
+def save_base64_image(username, image_id, base64_data, images_directory):
+    try:
+        # Decode the base64 data
+        image_data = base64.b64decode(base64_data)
+
+        # Create a directory if it doesn't exist
+        user_directory = os.path.join(images_directory, username)
+        os.makedirs(user_directory, exist_ok=True)
+
+        # Construct the file path with a .jpg extension
+        image_path = os.path.join(user_directory, f"{image_id}.jpg")
+
+        # Save the image as JPEG
+        with open(image_path, "wb") as image_file:
+            image_file.write(image_data)
+
+        return True, image_path  # Return the image path if needed
+    except Exception as e:
+        return False, str(e)
 
 #create the /information api point
 @app.route('/information', methods=['POST'])
@@ -84,8 +154,9 @@ def receive_image_data():
             return jsonify({"error": "No data received"}), 400
 
         # Iterate through each entry in imageData
-        for index, entry in enumerate(data):
+        for entry in data:
             # Process and save specific fields as needed
+            username = entry.get("username")
             photographer = entry.get("photographer")
             collector = entry.get("collector")
             collection = entry.get("collection")
@@ -100,13 +171,18 @@ def receive_image_data():
             province = entry.get('province')
             city = entry.get('city')
             preciseLocality = entry.get('preciseLocality')
-
+            mainImageID = entry.get('mainImageID')
+            mainImage = entry.get('mainImage')
+            extraImages = entry.get('extraImage', [])
+            extraImageIDs = entry.get('extraImageID', [])
+            
              # Create a new document in the 'information' database
             new_document = {
-                "photographer": photographer,
-                "collector": collector,
-                "collection": collection,
-                "scientific Name": sciName,
+                "username": username,
+                "photographers": photographer,
+                "collectors": collector,
+                "collections": collection,
+                "scientific_name": sciName,
                 "taxon": taxon,
                 "kingdom": kingdom,
                 "latitude": latitude,
@@ -117,12 +193,21 @@ def receive_image_data():
                 "province": province,
                 "city": city,
                 "preciseLocality": preciseLocality,
-                
+                "mainImageID": mainImageID,
+                "extraImageID": extraImageIDs
             }
 
             # Save the new document to the 'information' database
             informationDB.save(new_document)
 
+            save_base64_image(username,mainImageID,mainImage,images_directory)
+
+            if extraImages and extraImageIDs:
+                for i in range(len(extraImages)):
+                    if extraImages[i] and extraImageIDs[i]:
+                        save_base64_image(username, extraImageIDs[i], extraImages[i], images_directory)
+
+                        
         return jsonify({"message": "Data processed and saved successfully"}), 200
 
     except Exception as e:
@@ -209,7 +294,74 @@ def register_user():
     
     return jsonify(response), 201  # Return a 201 (Created) status code
 
+@app.route('/search', methods=['POST'])
+def search_database():
+    try:
+        # Get the search criteria and pagination parameters from the request data
+        search_criteria = request.json
+        page = search_criteria['page']
+        per_page = search_criteria['per_page']
 
+        # Extract the search criteria from the dictionary
+        primary_searchTerm = search_criteria['primaryTerm']
+        primary_searchType = search_criteria['primaryType']
+        filter_searchTerm = search_criteria['filterTerm']
+        filter_searchType = search_criteria['filterType']
+
+        # Calculate the start and end index for pagination
+        start_idx = (page - 1) * per_page
+
+        # Check if primary_searchTerm is not provided
+        if primary_searchTerm == '':
+
+            #create a new blank variable
+            results_blank=[]
+
+            # retrieve from all documents in couchDB between the pagination values
+            primary_results = informationDB.view('_all_docs', include_docs=True, skip=start_idx, limit=per_page)
+            
+            # Cycle through the documents and save it to a variable
+            results_blank=[row.doc for row in primary_results]
+
+            #return values
+            return jsonify(results_blank), 200
+        
+        # Checks if filter term is blank
+        if filter_searchTerm == '':
+
+            # create a blank variable
+            results=[]
+
+            #cycles through each document with specific primary search fields and values
+            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm}}):
+                
+                # adds each doc to the variable
+                results.append(doc)
+
+            #returns the new variable
+            return jsonify(results), 200
+
+        # If there are filter search criteria, narrow down the results
+        if filter_searchTerm != '':
+
+            #creates a blank filter variable
+            results_filter=[]
+
+            #cycles through each document with a specific primary and filter field and value
+            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm, filter_searchType:filter_searchTerm}}):
+                
+                # adds the values to the variable
+                results_filter.append(doc)
+
+            #returns the variable 
+            return jsonify(results_filter), 200
+            
+        
+
+    except Exception as e:
+        # Handle any errors
+        print("Error:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 # Start the Flask application if this script is run directly
 if __name__ == "__main__":

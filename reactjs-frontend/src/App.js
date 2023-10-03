@@ -11,6 +11,7 @@ import UploadStep3 from './UploadStep3';
 import useToken from './useToken';
 import Login from './Login';
 import Profile from './Profile';
+import Browser from './Browser';
 
 // Define the main App component
 const App = () => {
@@ -30,9 +31,10 @@ const App = () => {
         
         {/* navigate to login page if token has not been set */}
         <Route path="/profile" element={token ? <Profile token={token} setToken={setToken} /> : <Navigate to="/login" />}/>
-        <Route path="/upload" element={<UploadStep1 />} />
-        <Route path="/uploadStep2" element={<UploadStep2 />} />
-        <Route path="/uploadStep3" element={<UploadStep3 />} />
+        <Route path="/upload" element={<UploadStep1/>}/>
+        <Route path="/uploadStep2" element={token ? <UploadStep2 token={token} setToken={setToken} /> : <Navigate to="/login" />}/>
+        <Route path="/uploadStep3" element={token ? <UploadStep3 token={token} setToken={setToken} /> : <Navigate to="/login" />}/>
+        <Route path="/browse" element={<Browser />}/>
       </Routes>
     </div>
   );

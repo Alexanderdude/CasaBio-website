@@ -128,6 +128,14 @@ function CustomMarker({ sliderValue, updateLatLng, handleTowProCou }) {
         [handleTowProCou]
     );
 
+    useEffect(() => {
+        // Check if markerPosition is available and sliderValue changes
+        if (markerPosition !== null && sliderValue !== null) {
+            // Update circleRadius based on sliderValue
+            setCircleRadius(sliderValue);
+        }
+    }, [sliderValue, markerPosition]);
+
     // Use useMemo to create the throttled version of handleMarkerClick
     const throttledHandleMarkerClick = useMemo(
         () => _.throttle(handleMarkerClick, 2000),
