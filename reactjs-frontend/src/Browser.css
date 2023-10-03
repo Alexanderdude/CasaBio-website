@@ -1,0 +1,57 @@
+/* Style for the main search page container */
+.search-page {
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Arrange child elements in a vertical column */
+    align-items: center; /* Center horizontally */
+    justify-content: flex-start; /* Align content to the top */
+    height: 100vh; /* Make the container take up the full viewport height */
+    background-color: #f0f0f0; /* Set a background color */
+}
+
+/* Style for the container holding search elements */
+.search-container {
+    display: flex; /* Use flexbox for layout */
+    flex-direction: column; /* Arrange child elements in a vertical column */
+    align-items: center; /* Center horizontally */
+    width: 100%; /* Take up the full width of the parent */
+    max-width: 600px; /* Limit the maximum width of the container */
+    padding: 20px; /* Add some padding to the container */
+    box-sizing: border-box; /* Include padding and borders within the width */
+    background-color: #fff; /* Set a background color */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add a shadow effect */
+}
+
+/* Style for individual search bars */
+.search-bar {
+    display: flex; /* Use flexbox for layout */
+    align-items: center; /* Center vertically */
+    margin-bottom: 10px; /* Add spacing between search bars */
+}
+
+/* Style for dropdown menus */
+.search-dropdown {
+    width: 100px; /* Set a fixed width for dropdowns */
+    padding: 5px; /* Add padding to the dropdown */
+    margin-right: 10px; /* Add spacing to the right of dropdowns */
+}
+
+/* Style for search input fields */
+.primary-search,
+.sub-search {
+    flex-grow: 1; /* Allow input fields to grow and fill available space */
+    padding: 5px; /* Add padding to input fields */
+    border: 1px solid #ccc; /* Add a border with a light gray color */
+    border-radius: 4px; /* Round the corners of input fields */
+    font-size: 16px; /* Set the font size */
+    outline: none; /* Remove the default outline on focus */
+}
+
+/* Hover effect for the filter button */
+.filter-button:hover {
+    text-decoration: underline; /* Underline the text when hovered */
+}
+
+/* style for search button */
+.search-button {
+    width: 65%;
+}
