@@ -291,11 +291,30 @@ const UploadStep1 = () => {
     }
   };
 
-//sets the handleSubmit function
+  //sets the handleSubmit function
   const handleSubmit = () => {
     //navigates to the next form and saves the uploadedImage array for use on UploadStep2
     navigate('/UploadStep2', { state: { uploadedImages: uploadedImages } });
-  
+
+  };
+
+  // Define a state variable to control the zoom level
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  // Function to handle zoom in
+  const handleZoomIn = () => {
+    // Limit the zoom level to a reasonable maximum value (e.g., 4x)
+    if (zoomLevel < 4) {
+      setZoomLevel(zoomLevel + 0.5);
+    }
+  };
+
+  // Function to handle zoom out
+  const handleZoomOut = () => {
+    // Limit the zoom level to a reasonable minimum value (e.g., 1x)
+    if (zoomLevel > 1) {
+      setZoomLevel(zoomLevel - 0.5);
+    }
   };
 
 
@@ -319,7 +338,7 @@ const UploadStep1 = () => {
         </ol>
       </div>
 
-      
+
       <div className="center-section"
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -335,19 +354,19 @@ const UploadStep1 = () => {
         {/* Adds an input button that allow the user to click and add image files */}
 
         <Container>
-        {/* Uses Custom Bootstrap container to display images */}
-          
+          {/* Uses Custom Bootstrap container to display images */}
+
           <Row>
 
             {/* Maps out the array of images to display them in this container */}
             {uploadedImages.map((data, index) => (
 
               <Col md={4} key={index} >
-              {/* Sets a max of 4 images for each row */}
+                {/* Sets a max of 4 images for each row */}
 
                 <div className={`img-card ${selectedImageIndex === index ? 'image-checked' : ''}`}
                   onClick={() => { handleImageClick(index); handleClick(data) }}>
-                {/* Adds img-card styling to each image and image-checked styling to the image that was selected */}
+                  {/* Adds img-card styling to each image and image-checked styling to the image that was selected */}
 
                   <Image src={URL.createObjectURL(data)} style={{ width: '300px', height: '300px' }} thumbnail />
                   {/* Displays each image to the correct size */}
@@ -361,9 +380,9 @@ const UploadStep1 = () => {
 
         {/* Display Modal with multiple functions */}
         <Modal show={showModal !== false} onHide={handleCloseModal} centered>
-          
+
           <Modal.Header closeButton>
-          {/* Adds a closeButton to modal */}
+            {/* Adds a closeButton to modal */}
 
             <Modal.Title>Full View</Modal.Title>
             {/* Adds a title to the Modal */}
@@ -371,16 +390,24 @@ const UploadStep1 = () => {
           </Modal.Header>
           <Modal.Body>
             {selectedImage && (
-              <Image src={URL.createObjectURL(selectedImage)} style={{ width: '100%', height: '100%' }} />
+              <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
+                <img
+                  src={URL.createObjectURL(selectedImage)}
+                  style={{ width: `${zoomLevel * 100}%` }} // Apply zoom level to the width
+                  alt="Full View"
+                />
+              </div>
             )}
-            {/* Displays the selected image at full size */}
-
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleCloseModal}>
               Close
             </Button>
             {/* adds a secondary close button to this modal */}
+            <div className="zoom-controls">
+              <button onClick={handleZoomIn}>Zoom In</button>
+              <button onClick={handleZoomOut}>Zoom Out</button>
+            </div>
           </Modal.Footer>
         </Modal>
 

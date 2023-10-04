@@ -31,10 +31,10 @@ function Login(props) {
   function logMeIn(event) {
 
     // Check if reCAPTCHA is solved
-    if (!recaptchaValue) {
-      alert("Please complete the reCAPTCHA.");
-      return;
-    }
+    // if (!recaptchaValue) {
+    //   alert("Please complete the reCAPTCHA.");
+    //   return;
+    // }
 
     //sends a POST request to the /token api using axios
     axios({
