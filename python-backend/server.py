@@ -6,9 +6,12 @@ from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
 import json
 import couchdb
 import os
+import io
 from PIL import Image
 from io import BytesIO
 import base64
+import imagecodecs
+import numpy as np
 
 # get the current directory of the python app
 current_directory = os.getcwd()
@@ -128,18 +131,26 @@ def save_base64_image(username, image_id, base64_data, images_directory):
         # Decode the base64 data
         image_data = base64.b64decode(base64_data)
 
+        # Create a BytesIO object to work with the binary data
+        image_buffer = io.BytesIO(image_data)
+
+        # Open the image using PIL
+        image = Image.open(image_buffer)
+
+        # Convert the PIL image to an RGB array
+        rgb_data = np.array(image)
+
         # Create a directory if it doesn't exist
         user_directory = os.path.join(images_directory, username)
         os.makedirs(user_directory, exist_ok=True)
 
-        # Construct the file path with a .jpg extension
-        image_path = os.path.join(user_directory, f"{image_id}.jpg")
+        # Construct the file path with a .jxl extension
+        image_path = os.path.join(user_directory, f"{image_id}.jxl")
 
-        # Save the image as JPEG
-        with open(image_path, "wb") as image_file:
-            image_file.write(image_data)
-
-        return True, image_path  # Return the image path if needed
+        # Encode the RGB data as JXL and save it as a JXL file
+        jxl_data = imagecodecs.jpegxl_encode(rgb_data)
+        with open(image_path, "wb") as jxl_file:
+            jxl_file.write(jxl_data)
     except Exception as e:
         return False, str(e)
 
