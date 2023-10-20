@@ -1,6 +1,6 @@
 //import different libraries and modules
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Image } from 'react-bootstrap';
 import './UploadStep3.css';
 import MapModal from './MapModal';
@@ -48,6 +48,7 @@ function UploadStep3(props) {
     }, [token, setToken]);
 
     //define different variables
+    const navigate = useNavigate();
     const [collectors, setCollectors] = useState([]);
     const [photographers, setPhotographers] = useState([]);
     const [collections, setCollections] = useState([]);
@@ -198,34 +199,35 @@ function UploadStep3(props) {
         if (location.state && location.state.imageData) {
             const modifiedImageData = location.state.imageData.map((image) => ({
                 ...image,
-                collector: null,
-                photographer: null,
-                collection: null,
-                date: null,
-                latitude: null,
-                longitude: null,
-                accuracy: null,
-                country: null,
-                province: null,
-                city: null,
-                preciseLocality: null,
-                sciName: null,
-                taxon: null,
-                kingdom: null,
-                mainImageID: [],
-                extraImageID: [],
-                username: null,
-
+                collector: image.collector || null,
+                photographer: image.photographer || null,
+                collection: image.collection || null,
+                date: image.date || null,
+                latitude: image.latitude || null,
+                longitude: image.longitude || null,
+                accuracy: image.accuracy || null,
+                country: image.country || null,
+                province: image.province || null,
+                city: image.city || null,
+                preciseLocality: image.preciseLocality || null,
+                sciName: image.sciName || null,
+                taxon: image.taxon || null,
+                kingdom: image.kingdom || null,
+                mainImageID: image.mainImageID || [],
+                extraImageID: image.extraImageID || [],
+                username: image.username || null,
             }));
             setImageData(modifiedImageData);
         }
+
+        console.log(location.state.imageData);
     }, [location.state]);
 
 
-    const handleImageClick = (index) => {
+    const handleImageClick = (index, prevIndex) => {
         if (selectedImageIndex !== index) {
             setSelectedImageIndex(index); // Select the image
-            handleImageClickData(index);
+            handleImageClickData(index, prevIndex);
         }
     };
 
@@ -246,7 +248,9 @@ function UploadStep3(props) {
         }
     };
 
-    const handleImageClickData = (index) => {
+    const handleImageClickData = async (index, prevIndex) => {
+        //wait for the save information before continuing
+        await handleSaveInformation(prevIndex);
         const selectedImage = imageData[index];
 
         setSelectedPhotographer(selectedImage.photographer || photographers[0]);
@@ -299,7 +303,7 @@ function UploadStep3(props) {
         selectedImage.province = provinceInput || '';
         selectedImage.city = cityInput || '';
         selectedImage.preciseLocality = preciseInput || '';
-        selectedImage.username = username  || '';
+        selectedImage.username = username || '';
 
         // Check if a custom name was entered and update the respective array
         if (showCustomPhotographerInput) {
@@ -320,7 +324,6 @@ function UploadStep3(props) {
         }
 
         setImageData(updatedImageData);
-        alert('The selected image has been saved successfully. You can click the finalise button to continue.')
     };
 
 
@@ -382,7 +385,10 @@ function UploadStep3(props) {
     };
 
     // Function to check all data has been submitted between all images and uploads
-    const handleCheckUpload = () => {
+    const handleCheckUpload = async () => {
+
+        await handleSaveInformation(selectedImageIndex);
+
         let missingFields = [];
 
         // Iterate through the imageData array
@@ -503,6 +509,7 @@ function UploadStep3(props) {
             if (response.ok) {
                 // Handle success: Log a message indicating success
                 console.log('Information array sent successfully');
+                alert("Everything has uploaded.")
             } else {
                 // Handle error: Log the status text from the response
                 console.error('Error:', response.statusText);
@@ -513,6 +520,47 @@ function UploadStep3(props) {
         }
     };
 
+    //sends the user back to step 2 with the correctly formatted data
+    const handleSendBackStep2 = async (prevIndex) => {
+        await handleSaveInformation(prevIndex);
+        navigate('/UploadStep2', { state: { uploadedImages: imageData } });
+    };
+
+    //sends the user back to step 1 with the correctly formatted data
+    const handleSendBackStep1 = async (prevIndex) => {
+
+        await handleSaveInformation(prevIndex);
+        navigate('/upload', { state: { singleImageData: imageData } });
+
+    };
+
+    //useEffect to make sure the values are correct for the user when traversing through the different steps
+    useEffect(() => {
+        if (selectedImageIndex !== null) {
+            const selectedImage = imageData[selectedImageIndex];
+    
+            // Check if the selectedImage is defined before accessing its properties
+            if (selectedImage) {
+                setSelectedPhotographer(selectedImage.photographer || (photographers[0] || ''));
+                setSelectedCollectorName(selectedImage.collector || (collectors[0] || ''));
+                setSelectedCollectionName(selectedImage.collection || (collections[0] || ''));
+                setSelectedScientificName(selectedImage.sciName || '');
+                setLatitude(selectedImage.latitude || '');
+                setLongitude(selectedImage.longitude || '');
+                setAccuracy(selectedImage.accuracy || '');
+                setInputDate(selectedImage.date || '');
+                setCountryInput(selectedImage.country || '');
+                setProvinceInput(selectedImage.province || '');
+                setCityInput(selectedImage.city || '');
+                setPreciseInput(selectedImage.preciseLocality || '');
+                setTaxonInput(selectedImage.taxon || '');
+                setKingdomInput(selectedImage.kingdom || '');
+                setUsername(selectedImage.username || '');
+            }
+        }
+    }, [selectedImageIndex, imageData, photographers, collectors, collections]);
+    
+    
 
     return (
 
@@ -523,8 +571,8 @@ function UploadStep3(props) {
                 <h2>Upload Steps:</h2>
                 <ol>
                     {/* links to different forms */}
-                    <li><Link to="/Upload">Step 1 - Adding Observations</Link> </li>
-                    <li><Link to="/UploadStep2">Step 2 - Grouping Observations</Link></li>
+                    <li onClick={() => handleSendBackStep1(selectedImageIndex)}>Step 1 - Adding Observations</li>
+                    <li onClick={() => handleSendBackStep2(selectedImageIndex)}>Step 2 - Grouping Observations</li>
                     <li><Link to="/UploadStep3">Step 3 - Adding Information</Link></li>
                 </ol>
             </div>
@@ -559,7 +607,7 @@ function UploadStep3(props) {
                                         {/* adds styling to the selected image and grouped images */}
                                         <div
                                             className={`img-card ${selectedImageIndex === index ? 'image-checked' : ''} ${data.extraImage ? 'grouped-img-card' : ''}`}
-                                            onClick={() => handleImageClick(index)}
+                                            onClick={() => handleImageClick(index, selectedImageIndex)}
                                         >
                                             {/* displays the image set to these settings */}
                                             <Image src={data.mainImage} style={{ width: '300px', height: '300px' }} thumbnail />
@@ -734,9 +782,6 @@ function UploadStep3(props) {
                     <label htmlFor="preLoc">Precise Locality:</label>
                     <input type="text" id="preLoc" name="preLoc" value={preciseInput || ''} onChange={(e) => setPreciseInput(e.target.value)} />
                 </div>
-
-                {/* save data for selected image button */}
-                <button onClick={() => handleSaveInformation(selectedImageIndex)} >Save Information for selected image</button>
 
                 <br />
                 <br />

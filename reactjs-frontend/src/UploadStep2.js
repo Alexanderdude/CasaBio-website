@@ -1,7 +1,7 @@
 //import different libraries and modules
 import React, { useState, useEffect } from 'react';
 import './UploadStep2.css';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Image, Modal, Button } from 'react-bootstrap';
 
 const UploadStep2 = () => {
@@ -19,12 +19,7 @@ const UploadStep2 = () => {
     //handle the useEffect to recieve variable from previous Upload Step
     useEffect(() => {
         if (location.state && location.state.uploadedImages) {
-            //map the imageData Array from previous form to this new form
-            const initialImageData = location.state.uploadedImages.map(image => ({
-                mainImage: URL.createObjectURL(image),
-                extraImage: null, // Initialize extraImage to null for individual images
-            }));
-            setImageData(initialImageData);
+            setImageData(location.state.uploadedImages);
         }
     }, [location.state]);
 
@@ -252,13 +247,17 @@ const UploadStep2 = () => {
     };
 
     //function for clearing values in imageIndex
-    const handleProcessing = () => {
+    const handleProcessing = (bool) => {
 
         //sets variable for a newly cleared imageData
         const outputArray = handleFormat(imageData);
 
-        //sends the formatted array to the submit function
-        handleSubmit(outputArray);
+        if (bool === 'true') {
+            //sends the formatted array to the submit function
+            handleSubmit(outputArray);
+        } else {
+            handleBackStep(outputArray);
+        };
     };
 
     //function to handle submit
@@ -268,6 +267,29 @@ const UploadStep2 = () => {
         navigate('/UploadStep3', { state: { imageData: formattedArray } });
     };
 
+    const handleBackStep = (formattedArray) => {
+      
+        navigate('/upload', { state: { singleImageData: formattedArray } });
+    };
+
+    const handleDelete = () => {
+        const confirmDeletion = window.confirm("Are you sure you want to delete this item?");
+        
+        if (confirmDeletion) {
+          // Make a copy of the imageData array
+          const newArray = [...imageData];
+      
+          // Use splice to remove the item at the selectedImageIndex
+          newArray.splice(selectedImageIndex[0], 1);
+      
+          // Update the imageData state with the modified array
+          setImageData(newArray);
+      
+          // Reset the selectedImageIndex to a valid value, or handle it based on your use case
+          setSelectedImageIndex([0]);
+        }
+      };
+
     return (
         <div className="upload-step-two-container">
 
@@ -276,9 +298,9 @@ const UploadStep2 = () => {
                 <h2>Upload Steps:</h2>
                 <ol>
                     {/* displays the links to the different steps */}
-                    <li><Link to="/Upload">Step 1 - Adding Observations</Link></li>
-                    <li><Link to="/UploadStep2">Step 2 - Grouping Observations</Link></li>
-                    <li><Link to="/UploadStep3">Step 3 - Adding Information</Link></li>
+                    <li onClick={() => handleProcessing('false')}>Step 1 - Adding Observations</li>
+                    <li>Step 2 - Grouping Observations</li>
+                    <li onClick={() => handleProcessing('true')}>Step 3 - Adding Information</li>
                 </ol>
             </div>
 
@@ -322,10 +344,12 @@ const UploadStep2 = () => {
             <div className="right-section">
                 <h2>Functions:</h2>
                 {/* Displays the different buttons and disables some if no image is selected */}
+                <button onClick={handleDelete}>Delete selected image or group</button>
                 <button onClick={handleViewGroup} disabled={selectedImageIndex.length !== 1}>View selected group</button>
                 <button onClick={handleGroupImages}>Merge selected images</button>
                 <button onClick={handleUngroupGroup} disabled={selectedImageIndex.length !== 1}>Ungroup selected group</button>
-                <button onClick={handleProcessing}>Submit and Continue</button>
+                <button onClick={() => handleProcessing('true')}>Submit and Continue</button>
+                
             </div>
 
             {/* Display Modal Section */}

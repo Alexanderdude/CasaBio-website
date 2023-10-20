@@ -1,21 +1,28 @@
 //import the different libraries and modules
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './UploadStep1.css';
 import { Container, Row, Col, Image, Modal, Button } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation} from 'react-router-dom';
 
 
 //define the UploadStep1 
 const UploadStep1 = () => {
 
   //state the different variables
+  const location = useLocation();
   const [uploadedImages, setUploadedImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
+
+  useEffect(() => {
+    if (location.state && location.state.singleImageData) {
+      setUploadedImages(location.state.singleImageData);
+    }
+  }, [location.state]);
 
   // Function to handle the dropped files
   const handleDrop = (e) => {
@@ -29,7 +36,8 @@ const UploadStep1 = () => {
 
       // Check if the file is of type image
       if (file.type.startsWith('image/')) {
-        imageArray.push(file); // Add image files to the array
+        const imageUrl = URL.createObjectURL(file);
+        imageArray.push({ mainImage: imageUrl, extraImage: null });
       }
     }
 
@@ -61,7 +69,8 @@ const UploadStep1 = () => {
 
       // Check if the file is of type image
       if (file.type.startsWith('image/')) {
-        imageArray.push(file); // Add image files to the array
+        const imageUrl = URL.createObjectURL(file);
+        imageArray.push({ mainImage: imageUrl, extraImage: null });
       }
     }
 
@@ -116,11 +125,11 @@ const UploadStep1 = () => {
       // Create a copy of the uploaded images array
       const newArray = [...uploadedImages];
       // Get the selected image from the copied array
-      const rSelectedImage = newArray[selectedImageIndex];
+      const rSelectedImage = newArray[selectedImageIndex].mainImage;
 
       // Create an img element and load the selected image
       const imgElement = document.createElement("img");
-      imgElement.src = URL.createObjectURL(rSelectedImage);
+      imgElement.src = rSelectedImage;
 
       // Create a canvas object
       const canvas = document.createElement("canvas");
@@ -154,13 +163,13 @@ const UploadStep1 = () => {
         canvas.toBlob((blob) => {
           // Create a new File object with the rotated Blob
           const updatedImage = new File([blob], img_name, {
-            type: "image/jpg",
+            type: "image/png",
           });
           // Replace the selected image in the copied array
-          newArray[selectedImageIndex] = updatedImage;
+          newArray[selectedImageIndex].mainImage = URL.createObjectURL(updatedImage);
           // Update the uploadedImages state with the new array
           setUploadedImages(newArray);
-        }, "image/jpg");
+        }, "image/png");
       };
 
       // Reset selectedImageIndex after the rotation
@@ -177,11 +186,11 @@ const UploadStep1 = () => {
       // Create a copy of the uploaded images array
       const newArray = [...uploadedImages];
       // Get the selected image from the copied array
-      const selectedImage = newArray[selectedImageIndex];
+      const selectedImage = newArray[selectedImageIndex].mainImage;
 
       // Create an img element and load the selected image
       const imgElement = document.createElement("img");
-      imgElement.src = URL.createObjectURL(selectedImage);
+      imgElement.src = selectedImage;
 
       // Create a canvas object
       const canvas = document.createElement("canvas");
@@ -218,7 +227,7 @@ const UploadStep1 = () => {
             lastModified: selectedImage.lastModified,
           });
           // Replace the selected image in the copied array
-          newArray[selectedImageIndex] = flippedImage;
+          newArray[selectedImageIndex].mainImage = URL.createObjectURL(flippedImage);
           // Update the uploadedImages state with the new array
           setUploadedImages(newArray);
         }, selectedImage.type);
@@ -239,11 +248,11 @@ const UploadStep1 = () => {
       // Create a copy of the uploaded images array
       const newArray = [...uploadedImages];
       // Get the selected image from the copied array
-      const rSelectedImage = newArray[selectedImageIndex];
+      const rSelectedImage = newArray[selectedImageIndex].mainImage;
 
       // Create an img element and load the selected image
       const imgElement = document.createElement("img");
-      imgElement.src = URL.createObjectURL(rSelectedImage);
+      imgElement.src = rSelectedImage;
 
       // Create a canvas object
       const canvas = document.createElement("canvas");
@@ -275,13 +284,13 @@ const UploadStep1 = () => {
         canvas.toBlob((blob) => {
           // Create a new File object with the rotated Blob
           const updatedImage = new File([blob], img_name, {
-            type: "image/jpg", // Change the MIME type if needed
+            type: "image/png", // Change the MIME type if needed
           });
           // Replace the selected image in the copied array
-          newArray[selectedImageIndex] = updatedImage;
+          newArray[selectedImageIndex].mainImage = URL.createObjectURL(updatedImage);
           // Update the uploadedImages state with the new array
           setUploadedImages(newArray);
-        }, "image/jpg"); // Adjust the MIME type as needed
+        }, "image/png"); // Adjust the MIME type as needed
       };
 
       // Reset selectedImageIndex after the rotation
@@ -300,22 +309,82 @@ const UploadStep1 = () => {
 
   // Define a state variable to control the zoom level
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [imagePositionX, setImagePositionX] = useState(0);
+  const [imagePositionY, setImagePositionY] = useState(0);
 
-  // Function to handle zoom in
+
   const handleZoomIn = () => {
+    // Reset image position when zooming
+    setImagePositionX(0);
+    setImagePositionY(0);
+
     // Limit the zoom level to a reasonable maximum value (e.g., 4x)
     if (zoomLevel < 4) {
       setZoomLevel(zoomLevel + 0.5);
     }
   };
 
-  // Function to handle zoom out
   const handleZoomOut = () => {
+    // Reset image position when zooming
+    setImagePositionX(0);
+    setImagePositionY(0);
+
     // Limit the zoom level to a reasonable minimum value (e.g., 1x)
     if (zoomLevel > 1) {
       setZoomLevel(zoomLevel - 0.5);
     }
   };
+
+  // Function to handle the mousedown event on the image
+  const handleImageMouseDown = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStartX(e.clientX);
+    setDragStartY(e.clientY);
+  };
+
+  // Function to handle the mousemove event on the image
+  const handleImageMouseMove = (e) => {
+    if (!isDragging) return;
+
+    const deltaX = e.clientX - dragStartX;
+    const deltaY = e.clientY - dragStartY;
+
+    // Update the image position based on mouse movement
+    setImagePositionX(imagePositionX + deltaX);
+    setImagePositionY(imagePositionY + deltaY);
+
+    // Update the starting position for the next movement calculation
+    setDragStartX(e.clientX);
+    setDragStartY(e.clientY);
+  };
+
+  // Function to handle the mouseup event on the image
+  const handleImageMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Define a CSS class for the modal content to set the boundaries
+  const modalContentStyle = {
+    maxWidth: '100%',
+    maxHeight: '80vh',
+    overflow: 'hidden',
+    cursor: isDragging ? 'grabbing' : 'grab',
+    position: 'relative', // Required for positioning the child image
+  };
+
+  // Function to reset the image position to default
+  const resetImagePosition = () => {
+    // Reset the image position and zoom level to their defaults
+    setImagePositionX(0);
+    setImagePositionY(0);
+    setZoomLevel(1);
+  };
+
+
 
 
   return (
@@ -329,11 +398,8 @@ const UploadStep1 = () => {
           <li><Link to="/Upload">Step 1 - Adding Observations</Link> </li>
           {/* Displays a clickable link to step 1*/}
 
-          <li><Link to="/UploadStep2">Step 2 - Grouping Observations</Link></li>
+          <li onClick = {handleSubmit}>Step 2 - Grouping Observations</li>
           {/* Displays a clickable link to step 2*/}
-
-          <li><Link to="/UploadStep3">Step 3 - Adding Information</Link></li>
-          {/* Displays a clickable link to step 3*/}
 
         </ol>
       </div>
@@ -347,7 +413,7 @@ const UploadStep1 = () => {
         style={{ width: '100%', border: '1px dashed #ccc' }}
       > {/* Center Section Container to display images and handle all the drag and drop events */}
 
-        <h2>Upload Images or Short Videos</h2>
+        <h2>Upload Images</h2>
         {/* Heading for this container */}
 
         <input type="file" multiple onChange={handleFileInputChange} />
@@ -365,10 +431,10 @@ const UploadStep1 = () => {
                 {/* Sets a max of 4 images for each row */}
 
                 <div className={`img-card ${selectedImageIndex === index ? 'image-checked' : ''}`}
-                  onClick={() => { handleImageClick(index); handleClick(data) }}>
+                  onClick={() => { handleImageClick(index); handleClick(data.mainImage) }}>
                   {/* Adds img-card styling to each image and image-checked styling to the image that was selected */}
 
-                  <Image src={URL.createObjectURL(data)} style={{ width: '300px', height: '300px' }} thumbnail />
+                  <Image src={data.mainImage} style={{ width: '300px', height: '300px' }} thumbnail />
                   {/* Displays each image to the correct size */}
 
                 </div>
@@ -379,28 +445,46 @@ const UploadStep1 = () => {
         </Container>
 
         {/* Display Modal with multiple functions */}
-        <Modal show={showModal !== false} onHide={handleCloseModal} centered>
-
+        <Modal show={showModal !== false} onHide={() => {
+          handleCloseModal();
+          resetImagePosition(); // Reset image position when the modal is closed
+        }} centered>
           <Modal.Header closeButton>
-            {/* Adds a closeButton to modal */}
-
             <Modal.Title>Full View</Modal.Title>
-            {/* Adds a title to the Modal */}
-
           </Modal.Header>
           <Modal.Body>
             {selectedImage && (
-              <div style={{ width: '100%', height: '100%', overflow: 'auto' }}>
+              <div
+                style={{
+                  ...modalContentStyle,
+                  width: '100%',
+                  height: '100%',
+                  // Adds some styling to the image div
+                }}
+
+                // Adds dome functions to the mouse down and mouse move
+                onMouseDown={handleImageMouseDown}
+                onMouseMove={handleImageMouseMove}
+                onMouseUp={handleImageMouseUp}
+              >
+                {/* Adds the image itself to the image div container */}
                 <img
-                  src={URL.createObjectURL(selectedImage)}
-                  style={{ width: `${zoomLevel * 100}%` }} // Apply zoom level to the width
+                  src={selectedImage}
+                  style={{
+                    width: `${zoomLevel * 100}%`,
+                    transform: `translate(${imagePositionX}px, ${imagePositionY}px)`,
+                  }}
                   alt="Full View"
+                  draggable="false"
                 />
               </div>
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>
+            <Button variant="secondary" onClick={() => {
+              handleCloseModal(); // Close the modal when the user clicks this button
+              resetImagePosition();
+            }}>
               Close
             </Button>
             {/* adds a secondary close button to this modal */}

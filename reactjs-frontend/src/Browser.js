@@ -1,56 +1,69 @@
 //import all modules
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios'; // Import Axios
 import './Browser.css';
+import { useNavigate } from 'react-router-dom';
 
 //create the browser component
 function Browser() {
 
     //set all variables useStates
     const [primarySearchTerm, setPrimarySearchTerm] = useState('');
-    const [primarySearchType, setPrimarySearchType] = useState('observations'); // Dropdown for primary search
+    const [primarySearchType, setPrimarySearchType] = useState('Observations'); // Dropdown for primary search
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterSearchTerm, setFilterSearchTerm] = useState('');
-    const [filterSearchType, setFilterSearchType] = useState('collections'); // Dropdown for filter search
-
+    const [filterSearchType, setFilterSearchType] = useState('Collections'); // Dropdown for filter search
     const [searchData, setSearchData] = useState([]);
-
     const [page, setPage] = useState(1); // Current page number
-    const [perPage, setPerPage] = useState(20); // Results per page
-    const [totalPages, setTotalPages] = useState(1); // Total number of pages
+    const perPage = 20; // Results per page (constant value)
+    const [ping, setPing] = useState(0);
+    const navigate = useNavigate();
 
+    // Pagination controls
+    const displayedItemsCount = searchData.length;
+
+    // Check if the number of displayed items is a multiple of 20 (excluding 0)
+    const shouldShowLoadMore = displayedItemsCount > 0 && displayedItemsCount % 20 === 0;
 
     // Define the sendApiRequest function
-    const sendApiRequest = () => {
+    const sendApiRequest = async () => {
 
         // Make the API request using Axios
-        axios({ method: "POST", 
-                url: '/search', 
-                data: {
-                    primaryType: primarySearchType.toLowerCase(),
-                    primaryTerm: primarySearchTerm,
-                    filterType: filterSearchType.toLowerCase(),
-                    filterTerm: filterSearchTerm,
-                    page: page,
-                    per_page: perPage
-                }})
-            .then((response) => {
+        axios({
+            method: "POST",
+            url: '/search',
+            data: {
+                primaryType: primarySearchType.toLowerCase(),
+                primaryTerm: primarySearchTerm,
+                filterType: filterSearchType.toLowerCase(),
+                filterTerm: filterSearchTerm,
+                page: page,
+                per_page: perPage
+            }
+        })
+            .then(async (response) => {
                 // Handle the response data here
                 const receivedData = response.data; // Assuming the response data is an array of results
+
+                // Fetch images for each row in searchData
+                const updatedData = await Promise.all(
+                    receivedData.map(async (row) => {
+                        const imageUrl = await getImageBackend(row.mainImageID, row.username);
+                        return {
+                            ...row,
+                            imageUrl
+                        };
+                    })
+                );
 
                 // Update the searchData state with the received data
                 if (page === 1) {
                     // If it's the first page, replace the existing data
-                    setSearchData(receivedData);
+                    setSearchData(updatedData);
                 } else {
                     // If it's not the first page, append the new data to the existing data
-                    setSearchData([...searchData, ...receivedData]);
+                    setSearchData([...searchData, ...updatedData]);
                 }
-
-                // Calculate the total number of pages based on the response headers
-                const totalResults = parseInt(response.headers['x-total-count'], 10);
-                const calculatedTotalPages = Math.ceil(totalResults / perPage);
-                setTotalPages(calculatedTotalPages);
 
                 // Handle the response data here
                 console.log('API response:', receivedData);
@@ -61,10 +74,16 @@ function Browser() {
             });
     };
 
+    useEffect(() => {
+        sendApiRequest();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, ping]);
+
+
     // Function to handle the search button click
     const handleSearch = () => {
         setPage(1); // Reset to the first page when performing a new search
-        sendApiRequest();
+        setPing(ping + 1);
     };
 
     // Create a state variable to track whether the initial API request has been triggered
@@ -78,10 +97,8 @@ function Browser() {
 
     // Function to fetch more results when scrolling to the bottom
     const fetchMoreResults = () => {
-        if (page < totalPages) {
-            setPage(page + 1); // Increment the page number
-            sendApiRequest(); // Fetch the next page of results
-        }
+        const newPage = page + 1;
+        setPage(newPage);
     };
 
     //handle the primary search text change
@@ -98,7 +115,13 @@ function Browser() {
 
         // Ensure that the filter dropdown does not have the same value as the primary dropdown
         if (e.target.value === filterSearchType) {
-            setFilterSearchType(''); // Clear the filter dropdown value
+            setFilterSearchType((prevFilterSearchType) => {
+                if (prevFilterSearchType === "Collections") {
+                    return "Observations";
+                } else {
+                    return "Collections";
+                }
+            });
         }
     };
 
@@ -122,7 +145,55 @@ function Browser() {
 
         // Ensure that the primary dropdown does not have the same value as the filter dropdown
         if (e.target.value === primarySearchType) {
-            setPrimarySearchType(''); // Clear the primary dropdown value
+            setPrimarySearchType((prevPrimarySearchType) => {
+                if (prevPrimarySearchType === "Collections") {
+                    return "Observations";
+                } else {
+                    return "Collections";
+                }
+            });
+        }
+    };
+
+    // Function to handle row clicks and store the selected index
+    const handleRowClick = (index) => {
+        // Navigate to the desired page using the navigate function
+        navigate('/observation/' + searchData[index].mainImageID);
+    };
+
+
+    const getImageBackend = async (image_name, username) => {
+        try {
+            // Make a POST request to your backend API
+            axios({
+                method: "POST",
+                url: '/get_image',
+                data: {
+                    username: username,
+                    image_name: image_name,
+                }
+            })
+                .then((response) => {
+                    // Check if the response contains image data
+                    if (response.status === 200 && response.data instanceof Blob) {
+                        // Create a blob URL for the image
+                        const imageUrl = URL.createObjectURL(response.data);
+                        return imageUrl;
+                    } else {
+                        // Handle any other response status or data types here
+                        console.error('Unexpected response:', response);
+                        return null; // Return null if the response doesn't contain an image
+                    }
+                })
+                .catch((error) => {
+                    // Handle network errors or other exceptions
+                    console.error('Error fetching image:', error);
+                    return null; // Return null in case of errors
+                });
+        } catch (error) {
+            // Handle any exceptions from the try block
+            console.error('Error fetching image:', error);
+            return null; // Return null in case of errors
         }
     };
 
@@ -146,11 +217,13 @@ function Browser() {
                     >
 
                         {/* Displays options for the dropdown menu */}
-                        <option value="Observations">Observations</option>
+                        <option value="scientific_name">Scientific Name</option>
                         <option value="Collections">Collections</option>
                         <option value="Photographers">Photographers</option>
                         <option value="Collectors">Collectors</option>
-                        <option value="Locations">Locations</option>
+                        <option value="username">Username</option>
+                        <option value="country">Country</option>
+                        <option value="city">City</option>
                     </select>
 
                     {/* Gets the users input for searching data */}
@@ -183,11 +256,13 @@ function Browser() {
                             >
 
                                 {/* Displays the options for the dropdown menu */}
-                                <option value="Observations">Observations</option>
+                                <option value="scientific_name">Scientific Name</option>
                                 <option value="Collections">Collections</option>
                                 <option value="Photographers">Photographers</option>
                                 <option value="Collectors">Collectors</option>
-                                <option value="Locations">Locations</option>
+                                <option value="username">Username</option>
+                                <option value="country">Country</option>
+                                <option value="city">City</option>
                             </select>
 
                             {/* Gets the users input for the filter search bar */}
@@ -209,18 +284,25 @@ function Browser() {
             {/* New section for displaying image rows */}
             <div className="image-rows">
                 {searchData.map((row, index) => (
-                    <div className="image-row" key={index}>
+                    <div
+                        className={`image-row`}
+                        key={index}
+                        onClick={() => handleRowClick(index)}
+                    >
                         <img src={row.imageUrl} alt={row.heading} className="image" />
                         <div className="text-content">
-                            <h2>Observation: {row.Observation}</h2>
-                            <p>Description: {row.Description}</p>
+                            <h3>{row.scientific_name}</h3>
+                            <p>Kingdom: {row.kingdom}</p>
+                            <p>Locality: {row.province}</p>
+                            <p>Username: {row.username}</p>
+                            <p>Collector: {row.collectors}</p>
                         </div>
                     </div>
                 ))}
             </div>
 
             {/* Pagination controls */}
-            {page < totalPages && (
+            {shouldShowLoadMore && (
                 <button className="load-more-button" onClick={fetchMoreResults}>
                     Load More
                 </button>

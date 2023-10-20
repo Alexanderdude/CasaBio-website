@@ -1,14 +1,21 @@
 # Import necessary modules
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from datetime import datetime, timedelta, timezone
 from flask_jwt_extended import create_access_token,get_jwt,get_jwt_identity, \
                                unset_jwt_cookies, jwt_required, JWTManager
 import json
 import couchdb
 import os
+import io
 from PIL import Image
 from io import BytesIO
 import base64
+import imagecodecs
+# Copyright notice and license information for imagecodecs/_jpegxl.pyx
+# This code is part of the imagecodecs package (https://github.com/your-username/imagecodecs).
+# Copyright (c) 2021-2023, Christoph Gohlke
+# All rights reserved. Licensed under the BSD 3-Clause License.
+import numpy as np
 
 # get the current directory of the python app
 current_directory = os.getcwd()
@@ -128,18 +135,26 @@ def save_base64_image(username, image_id, base64_data, images_directory):
         # Decode the base64 data
         image_data = base64.b64decode(base64_data)
 
+        # Create a BytesIO object to work with the binary data
+        image_buffer = io.BytesIO(image_data)
+
+        # Open the image using PIL
+        image = Image.open(image_buffer)
+
+        # Convert the PIL image to an RGB array
+        rgb_data = np.array(image)
+
         # Create a directory if it doesn't exist
         user_directory = os.path.join(images_directory, username)
         os.makedirs(user_directory, exist_ok=True)
 
-        # Construct the file path with a .jpg extension
-        image_path = os.path.join(user_directory, f"{image_id}.jpg")
+        # Construct the file path with a .jxl extension
+        image_path = os.path.join(user_directory, f"{image_id}.jxl")
 
-        # Save the image as JPEG
-        with open(image_path, "wb") as image_file:
-            image_file.write(image_data)
-
-        return True, image_path  # Return the image path if needed
+        # Encode the RGB data as JXL and save it as a JXL file
+        jxl_data = imagecodecs.jpegxl_encode(rgb_data)
+        with open(image_path, "wb") as jxl_file:
+            jxl_file.write(jxl_data)
     except Exception as e:
         return False, str(e)
 
@@ -210,6 +225,26 @@ def receive_image_data():
                         
         return jsonify({"message": "Data processed and saved successfully"}), 200
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route('/get_image', methods=['POST'])
+def get_image():
+    try:
+        imageData= request.get_json()
+        # Get the username and image name from the request
+        username = imageData['username']
+        image_name = imageData['image_name']
+
+        # Construct the path to the image
+        image_path = os.path.join(images_directory, username, f"{image_name}.jxl")
+
+        # Check if the image exists
+        if os.path.exists(image_path):
+            # Send the image back to the frontend
+            return send_from_directory(os.path.dirname(image_path), os.path.basename(image_path))
+        else:
+            return jsonify({"error": "Image not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
@@ -333,11 +368,11 @@ def search_database():
             results=[]
 
             #cycles through each document with specific primary search fields and values
-            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm}}):
+            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm}, 'skip':start_idx, 'limit':per_page}):
                 
                 # adds each doc to the variable
                 results.append(doc)
-
+            
             #returns the new variable
             return jsonify(results), 200
 
@@ -348,7 +383,7 @@ def search_database():
             results_filter=[]
 
             #cycles through each document with a specific primary and filter field and value
-            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm, filter_searchType:filter_searchTerm}}):
+            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm, filter_searchType:filter_searchTerm}, 'skip':start_idx, 'limit':per_page}):
                 
                 # adds the values to the variable
                 results_filter.append(doc)

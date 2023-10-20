@@ -30,7 +30,7 @@
 
 /* Style for dropdown menus */
 .search-dropdown {
-    width: 100px; /* Set a fixed width for dropdowns */
+    width: 200px; /* Set a fixed width for dropdowns */
     padding: 5px; /* Add padding to the dropdown */
     margin-right: 10px; /* Add spacing to the right of dropdowns */
 }
@@ -55,3 +55,17 @@
 .search-button {
     width: 65%;
 }
+
+.image-row {
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    transition: border-color 0.3s ease; /* Add a smooth transition effect for the border color */
+  }
+  
+  /* Style for the hover effect (turn the border red) */
+  .image-row:hover {
+    border-color: red;
+  }
+  
