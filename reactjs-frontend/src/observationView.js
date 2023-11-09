@@ -14,7 +14,7 @@ function ObservationView() {
     // Make the API request using Axios
     axios({
       method: 'POST',
-      url: '/search',
+      url: '/singleSearch',
       data: {
         primaryType: 'mainImageID',
         primaryTerm: observationID,
@@ -57,6 +57,7 @@ function ObservationView() {
           )}
           <p>Date of Event: {observationData[0]?.imageDate || ''}</p>
           <p>Username: {observationData[0]?.username || ''}</p>
+          <p>Collection: {observationData[0]?.collections || ''}</p>
           <p>Collector: {observationData[0]?.collectors || ''}</p>
           <p>Photographer: {observationData[0]?.photographers || ''}</p>
           <p>Country: {observationData[0]?.country || ''}</p>

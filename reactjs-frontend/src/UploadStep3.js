@@ -27,13 +27,8 @@ function UploadStep3(props) {
 
                 const res = response.data;
 
-                // Check if 'access_token' exists in the response and update the token if available
-                if (res.access_token) {
-                    setToken(res.access_token); // Use the destructured setToken here
-                }
-
                 // Set the username based on the response (profile name)
-                setUsername(res.name);
+                setUsername(res[0].Username);
             } catch (error) {
                 if (error.response) {
                     console.log(error.response);
@@ -55,34 +50,59 @@ function UploadStep3(props) {
     const [selectedCollectorName, setSelectedCollectorName] = useState(collectors[0]);
     const [selectedCollectionName, setSelectedCollectionName] = useState(collections[0]);
     const [selectedPhotographer, setSelectedPhotographer] = useState(photographers[0]);
+    const [checkboxValues, setCheckboxValues] = useState({
+        drawingPaint: false,
+        literature: false,
+        invaSpec: false,
+        dying: false,
+        dead: false,
+        barkStrip: false,
+        camTrap: false,
+    });
+    const [subjectCheckBox, setSubjectCheckBox] = useState({
+        people: false,
+        landscape: false,
+        dissection: false,
+        exSitu: false,
+        pollinator: false,
+        plant: false,
+        wholePlant: false,
+        flowerBranch: false,
+        flower: false,
+        fruitCap: false,
+        herbarium: false,
+        bark: false,
+        leaf: false,
+    });
+
     // Function to fetch data from the server based on the username
     useEffect(() => {
-        // Create a JSON object with the username
-        const requestData = { 'username': username };
-
         const fetchData = async () => {
             try {
-                // Make a GET request to your API endpoint with the username
                 const response = await fetch('/informationStep3', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(requestData), // send username 
+                    body: JSON.stringify({ 'username': username }),
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Data:', data); // Log the data for debugging
-                    // Update state variables with the retrieved data
-                    if (data.collectors) {
+
+                    if (data.collectors && data.collectors.length > 0) {
                         setCollectors(data.collectors);
+                        setSelectedCollectorName(data.collectors[0]);
                     }
-                    if (data.photographers) {
+
+                    if (data.photographers && data.photographers.length > 0) {
                         setPhotographers(data.photographers);
+                        setSelectedPhotographer(data.photographers[0]);
                     }
-                    if (data.collections) {
+
+                    if (data.collections && data.collections.length > 0) {
                         setCollections(data.collections);
+                        setSelectedCollectionName(data.collections[0]);
                     }
                 } else {
                     console.error('Error fetching data:', response.statusText);
@@ -92,7 +112,6 @@ function UploadStep3(props) {
             }
         };
 
-        // Call fetchData when the component mounts or when the username changes
         fetchData();
     }, [username]);
 
@@ -111,14 +130,6 @@ function UploadStep3(props) {
             setSelectedCollectorName(collectors[0]); // set to the first value
         }
     }, [collectors]);
-
-    // Add a new useEffect to watch for changes in 'collections'
-    useEffect(() => {
-        // Check if 'collections' has data and set 'selectedCollectionName' accordingly
-        if (collections.length > 0) {
-            setSelectedCollectionName(collections[0]); // set to first value
-        }
-    }, [collections]);
 
     // Add a new useEffect to watch for changes in 'photographers'
     useEffect(() => {
@@ -216,14 +227,15 @@ function UploadStep3(props) {
                 mainImageID: image.mainImageID || [],
                 extraImageID: image.extraImageID || [],
                 username: image.username || null,
+                tags: image.tags || null,
+                subject: image.subject || null,
             }));
             setImageData(modifiedImageData);
         }
 
-        console.log(location.state.imageData);
     }, [location.state]);
 
-
+    //handle the click funcitons when the user clicks on an image
     const handleImageClick = (index, prevIndex) => {
         if (selectedImageIndex !== index) {
             setSelectedImageIndex(index); // Select the image
@@ -248,6 +260,7 @@ function UploadStep3(props) {
         }
     };
 
+    //function to set all values of newly clicked image
     const handleImageClickData = async (index, prevIndex) => {
         //wait for the save information before continuing
         await handleSaveInformation(prevIndex);
@@ -271,8 +284,33 @@ function UploadStep3(props) {
         setCustomCollectionName('');
         setCustomCollectorName('');
         setCustomPhotographer('');
+        setCheckboxValues(selectedImage.tags || {
+            drawingPaint: false,
+            literature: false,
+            invaSpec: false,
+            dying: false,
+            dead: false,
+            barkStrip: false,
+            camTrap: false,
+        });
+        setSubjectCheckBox(selectedImage.subject || {
+            people: false,
+            landscape: false,
+            dissection: false,
+            exSitu: false,
+            pollinator: false,
+            plant: false,
+            wholePlant: false,
+            flowerBranch: false,
+            flower: false,
+            fruitCap: false,
+            herbarium: false,
+            bark: false,
+            leaf: false,
+        })
     };
 
+    //function to save all data to selected image
     const handleSaveInformation = async (index) => {
         const updatedImageData = [...imageData];
         const selectedImage = updatedImageData[index];
@@ -304,6 +342,8 @@ function UploadStep3(props) {
         selectedImage.city = cityInput || '';
         selectedImage.preciseLocality = preciseInput || '';
         selectedImage.username = username || '';
+        selectedImage.tags = checkboxValues || '';
+        selectedImage.subject = subjectCheckBox || '';
 
         // Check if a custom name was entered and update the respective array
         if (showCustomPhotographerInput) {
@@ -325,7 +365,6 @@ function UploadStep3(props) {
 
         setImageData(updatedImageData);
     };
-
 
     // Function to handle changes in the custom photographer input
     const handleCustomPhotographerChange = (event) => {
@@ -426,6 +465,7 @@ function UploadStep3(props) {
         }
     };
 
+    // function to convert a blob images to a base64
     const handleBlobToBase = async (blobUrl) => {
         try {
             const response = await fetch(blobUrl);
@@ -447,7 +487,7 @@ function UploadStep3(props) {
         }
     };
 
-
+    // function to format the array for sending to backend
     const preRequest = async () => {
         const updatedImageData = _.cloneDeep(imageData); // Use Lodash's cloneDeep function so copies dont modify original imageData
 
@@ -538,7 +578,6 @@ function UploadStep3(props) {
     useEffect(() => {
         if (selectedImageIndex !== null) {
             const selectedImage = imageData[selectedImageIndex];
-    
             // Check if the selectedImage is defined before accessing its properties
             if (selectedImage) {
                 setSelectedPhotographer(selectedImage.photographer || (photographers[0] || ''));
@@ -555,12 +594,52 @@ function UploadStep3(props) {
                 setPreciseInput(selectedImage.preciseLocality || '');
                 setTaxonInput(selectedImage.taxon || '');
                 setKingdomInput(selectedImage.kingdom || '');
-                setUsername(selectedImage.username || '');
+                setCheckboxValues(selectedImage.tags || {
+                    drawingPaint: false,
+                    literature: false,
+                    invaSpec: false,
+                    dying: false,
+                    dead: false,
+                    barkStrip: false,
+                    camTrap: false,
+                });
+                setSubjectCheckBox(selectedImage.subject || {
+                    people: false,
+                    landscape: false,
+                    dissection: false,
+                    exSitu: false,
+                    pollinator: false,
+                    plant: false,
+                    wholePlant: false,
+                    flowerBranch: false,
+                    flower: false,
+                    fruitCap: false,
+                    herbarium: false,
+                    bark: false,
+                    leaf: false,
+                })
+
             }
         }
     }, [selectedImageIndex, imageData, photographers, collectors, collections]);
-    
-    
+
+    // Event handler to toggle checkbox values
+    const handleCheckBoxChange = (event) => {
+        const { name, checked } = event.target;
+        setCheckboxValues({
+            ...checkboxValues,
+            [name]: checked,
+        });
+
+    };
+
+    const handleSubjectCheckBoxChange = (event) => {
+        const { name, checked } = event.target;
+        setSubjectCheckBox({
+            ...subjectCheckBox,
+            [name]: checked,
+        });
+    };
 
     return (
 
@@ -606,11 +685,16 @@ function UploadStep3(props) {
                                     <Col md={4} key={index}>
                                         {/* adds styling to the selected image and grouped images */}
                                         <div
-                                            className={`img-card ${selectedImageIndex === index ? 'image-checked' : ''} ${data.extraImage ? 'grouped-img-card' : ''}`}
+                                            className={`img-card ${selectedImageIndex === index ? 'image-checked' : ''} ${data.extraImage && data.extraImage.length > 0 ? 'grouped-img-card' : ''}`}
                                             onClick={() => handleImageClick(index, selectedImageIndex)}
                                         >
                                             {/* displays the image set to these settings */}
                                             <Image src={data.mainImage} style={{ width: '300px', height: '300px' }} thumbnail />
+
+                                            <div className="image-tag">
+                                                {data.filename}
+                                            </div>
+
                                         </div>
                                     </Col>
                                 )
@@ -628,166 +712,464 @@ function UploadStep3(props) {
 
             {/* define the right container for the upload step */}
             <div className="upload-step-right">
-                <h1>Basic Info</h1>
+                <div className="scrollable-content">
+                    <h1>Basic Info</h1>
 
-                {/* adds the user name here */}
-                <p id="username">User name: {username}</p>
+                    {/* adds the user name here */}
+                    <p id="username">User name: {username}</p>
 
-                {/* adds a dropdown for the photographer name */}
-                <label htmlFor="namesDropdown">Photographer Name:</label>
-                <select
-                    id="namesDropdown"
-                    value={selectedPhotographer}
-                    onChange={handlePhotographerChange}
-                >
+                    {/* adds a dropdown for the photographer name */}
+                    <label htmlFor="namesDropdown">Photographer Name:</label>
+                    <select
+                        id="namesDropdown"
+                        value={selectedPhotographer}
+                        onChange={handlePhotographerChange}
+                    >
 
-                    {/* maps out each photographer this user has used before */}
-                    {photographers.map((photographer) => (
-                        <option key={photographer} value={photographer}>
-                            {photographer}
-                        </option>
-                    ))}
+                        {/* maps out each photographer this user has used before */}
+                        {photographers.map((photographer) => (
+                            <option key={photographer} value={photographer}>
+                                {photographer}
+                            </option>
+                        ))}
 
-                    {/* displays an input slot if the user chose custom option  */}
-                    <option value="custom">Custom</option>
-                </select>
-                {showCustomPhotographerInput && (
-                    <div id="customInputContainer">
-                        <label htmlFor="customInput">Enter new Photographer's name:</label>
+                        {/* displays an input slot if the user chose custom option  */}
+                        <option value="custom">Custom</option>
+                    </select>
+                    {showCustomPhotographerInput && (
+                        <div id="customInputContainer">
+                            <label htmlFor="customInput">Enter new Photographer's name:</label>
+                            <input
+                                type="text"
+                                id="customInput"
+                                value={customPhotographer}
+                                onChange={handleCustomPhotographerChange}
+                            />
+                        </div>
+                    )}
+
+                    {/* adds a group that allows the user to display a date ###SET A DEFAULT DATE SO USERS KNOW WHAT FORMAT TO USE### */}
+                    <div>
+                        <label htmlFor="imageDate">Date:</label>
+                        <input type="text" id="imageDate" name="imageDate" placeholder='DD/MM/YYYY' onChange={(e) => setInputDate(e.target.value)} value={inputDate || ''} />
+                    </div>
+
+                    {/* displays a drop down fro the collectors name  */}
+                    <div>
+                        <label htmlFor="colName">Collectors Name:</label>
+                        <select
+                            id="colName"
+                            name="colName"
+                            value={selectedCollectorName}
+                            onChange={handleCollectorNameChange}
+                        >
+
+                            {/* maps out each collector the user has used before */}
+                            {collectors.map((collectorName) => (
+                                <option key={collectorName} value={collectorName.toLowerCase()}>
+                                    {collectorName}
+                                </option>
+                            ))}
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+
+                    {/* adds a new input box if the user selected the custom option */}
+                    <div id="colCustom" style={{ display: showCustomCollectorInput ? 'block' : 'none' }}>
+                        <label htmlFor="colCustom-input">Enter new Collectors name:</label>
                         <input
                             type="text"
-                            id="customInput"
-                            value={customPhotographer}
-                            onChange={handleCustomPhotographerChange}
+                            id="colCustom-input"
+                            value={customCollectorName}
+                            onChange={handleCustomCollectorNameChange}
                         />
                     </div>
-                )}
 
-                {/* adds a group that allows the user to display a date ###SET A DEFAULT DATE SO USERS KNOW WHAT FORMAT TO USE### */}
-                <div className="input-group">
-                    <label htmlFor="imageDate">Date:</label>
-                    <input type="text" id="imageDate" name="imageDate" placeholder='DD/MM/YYYY' onChange={(e) => setInputDate(e.target.value)} value={inputDate || ''} />
+                    {/* adds Collection Name with dropdown with all users previous collection names */}
+                    <div>
+                        <label htmlFor="collectionName">Collection Name:</label>
+                        <select
+                            id="collectionName"
+                            name="collectionName"
+                            value={selectedCollectionName}
+                            onChange={handleCollectionNameChange}
+                        >
+
+                            {/* maps out each collection name the user has used before */}
+                            {collections.map((collectionName) => (
+                                <option key={collectionName} value={collectionName.toLowerCase()}>
+                                    {collectionName}
+                                </option>
+                            ))}
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+
+                    {/* adds a new input box if the user selected the custom option */}
+                    <div id="collectionCustom" style={{ display: showCustomCollectionInput ? 'block' : 'none' }}>
+                        <label htmlFor="collectionCustom-input">Enter new Collection name:</label>
+                        <input
+                            type="text"
+                            id="collectionCustom-input"
+                            value={customCollectionName}
+                            onChange={handleCustomCollectionNameChange}
+                        />
+                    </div>
+
+                    {/* Scientific name autosearch */}
+                    <div>
+
+                        <AutocompleteGBIF onValueSet={selectedScientificName} onUpdateScientificName={handleUpdateScientificName} onUpdateClassKing={handleClassKing} />
+                    </div>
+                    <hr />
+
+                    <h1>Tags:</h1>
+
+                    {/* creates a container for the checkboxes */}
+                    <div className="checkbox-container">
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="drawingPaint"
+                                    checked={checkboxValues.drawingPaint}
+                                    onChange={handleCheckBoxChange}
+                                />
+                            </span>Painting or Drawings
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="literature"
+                                    checked={checkboxValues.literature}
+                                    onChange={handleCheckBoxChange}
+                                />
+                            </span>Literature
+
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="invaSpec"
+                                    checked={checkboxValues.invaSpec}
+                                    onChange={handleCheckBoxChange}
+                                />
+                            </span>Invasive species
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="dying"
+                                    checked={checkboxValues.dying}
+                                    onChange={handleCheckBoxChange}
+                                />
+                            </span>Dying/Stressed
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="dead"
+                                    checked={checkboxValues.dead}
+                                    onChange={handleCheckBoxChange}
+                                />
+                            </span>Dead/Mortality
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="barkStrip"
+                                    checked={checkboxValues.barkStrip}
+                                    onChange={handleCheckBoxChange}
+                                />
+                            </span>Bark-stripped
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="camTrap"
+                                    checked={checkboxValues.camTrap}
+                                    onChange={handleCheckBoxChange}
+                                />
+                            </span>Camera trap
+                        </label>
+
+                    </div>
+
+                    <hr />
+
+                    <h1>Subject:</h1>
+
+                    {/* creates a container for the checkboxes */}
+                    <div className="checkbox-container">
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="people"
+                                    checked={subjectCheckBox.people}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>People
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="landscape"
+                                    checked={subjectCheckBox.landscape}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>Landscape
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="dissection"
+                                    checked={subjectCheckBox.dissection}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>Dissection
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="exSitu"
+                                    checked={subjectCheckBox.exSitu}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>Ex-situ
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="pollinator"
+                                    checked={subjectCheckBox.pollinator}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>Pollinator
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="plant"
+                                    checked={subjectCheckBox.plant}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>Plant
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="wholePlant"
+                                    checked={subjectCheckBox.wholePlant}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>-Whole plant
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="flowerBranch"
+                                    checked={subjectCheckBox.flowerBranch}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>-Flowering branch
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="flower"
+                                    checked={subjectCheckBox.flower}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>-Flower
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="fruitCap"
+                                    checked={subjectCheckBox.fruitCap}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span> -Fruit/Capsule
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="herbarium"
+                                    checked={subjectCheckBox.herbarium}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>-Herbarium specimen
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="bark"
+                                    checked={subjectCheckBox.bark}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>-Bark/stem
+                        </label>
+
+                        {/* creates a label for each checkbox */}
+                        <label className="checkbox-label">
+
+                            {/* create the checkbox itself with set variables */}
+                            <span className="checkbox-input">
+                                <input
+                                    type="checkbox"
+                                    name="leaf"
+                                    checked={subjectCheckBox.leaf}
+                                    onChange={handleSubjectCheckBoxChange}
+                                />
+                            </span>-Leaf
+                        </label>
+
+                    </div>
+
+                    {/* adds a new sub heading for the coordinates */}
+                    <h1>Coordinates</h1>
+
+                    {/* latitude input-group */}
+                    <div>
+                        <label htmlFor="latNumber">Latitude:</label>
+                        <input type="text" id="latNumber" name="latNumber" value={latitude || ''} onChange={(e) => setLatitude(e.target.value)} />
+                    </div>
+
+                    {/* longitude input-group */}
+                    <div>
+                        <label htmlFor="longNumber">Longitude:</label>
+                        <input type="text" id="longNumber" name="longNumber" value={longitude || ''} onChange={(e) => setLongitude(e.target.value)} />
+                    </div>
+
+                    <hr />
+
+                    {/* adds a new sub heading for the Locality */}
+                    <h1>Locality</h1>
+
+                    {/* Country input-group */}
+                    <div>
+                        <label htmlFor="locCount">Country:</label>
+                        <input type="text" id="locCount" name="locCount" value={countryInput || ''} onChange={(e) => setCountryInput(e.target.value)} />
+                    </div>
+
+                    {/* Province input-group */}
+                    <div>
+                        <label htmlFor="locPro">Province:</label>
+                        <input type="text" id="locPro" name="locPro" value={provinceInput || ''} onChange={(e) => setProvinceInput(e.target.value)} />
+                    </div>
+
+                    {/* minor locality input-group */}
+                    <div>
+                        <label htmlFor="minLoc">City/Town:</label>
+                        <input type="text" id="minLoc" name="minLoc" value={cityInput || ''} onChange={(e) => setCityInput(e.target.value)} />
+                    </div>
+
+                    {/* precise locality input-group */}
+                    <div>
+                        <label htmlFor="preLoc">Precise Locality:</label>
+                        <input type="text" id="preLoc" name="preLoc" value={preciseInput || ''} onChange={(e) => setPreciseInput(e.target.value)} />
+                    </div>
+
+                    <br />
+                    <br />
+
+                    {/* this button is used to check all data and submit it to the database */}
+                    <button onClick={handleCheckUpload}>finalise</button>
                 </div>
-
-                {/* displays a drop down fro the collectors name  */}
-                <div className="input-group">
-                    <label htmlFor="colName">Collectors Name:</label>
-                    <select
-                        id="colName"
-                        name="colName"
-                        value={selectedCollectorName}
-                        onChange={handleCollectorNameChange}
-                    >
-
-                        {/* maps out each collector the user has used before */}
-                        {collectors.map((collectorName) => (
-                            <option key={collectorName} value={collectorName.toLowerCase()}>
-                                {collectorName}
-                            </option>
-                        ))}
-                        <option value="custom">Custom</option>
-                    </select>
-                </div>
-
-                {/* adds a new input box if the user selected the custom option */}
-                <div id="colCustom" style={{ display: showCustomCollectorInput ? 'block' : 'none' }}>
-                    <label htmlFor="colCustom-input">Enter new Collectors name:</label>
-                    <input
-                        type="text"
-                        id="colCustom-input"
-                        value={customCollectorName}
-                        onChange={handleCustomCollectorNameChange}
-                    />
-                </div>
-
-                {/* adds Collection Name with dropdown with all users previous collection names */}
-                <div className="input-group">
-                    <label htmlFor="collectionName">Collection Name:</label>
-                    <select
-                        id="collectionName"
-                        name="collectionName"
-                        value={selectedCollectionName}
-                        onChange={handleCollectionNameChange}
-                    >
-
-                        {/* maps out each collection name the user has used before */}
-                        {collections.map((collectionName) => (
-                            <option key={collectionName} value={collectionName.toLowerCase()}>
-                                {collectionName}
-                            </option>
-                        ))}
-                        <option value="custom">Custom</option>
-                    </select>
-                </div>
-
-                {/* adds a new input box if the user selected the custom option */}
-                <div id="collectionCustom" style={{ display: showCustomCollectionInput ? 'block' : 'none' }}>
-                    <label htmlFor="collectionCustom-input">Enter new Collection name:</label>
-                    <input
-                        type="text"
-                        id="collectionCustom-input"
-                        value={customCollectionName}
-                        onChange={handleCustomCollectionNameChange}
-                    />
-                </div>
-
-                {/* Scientific name autosearch */}
-                <div>
-
-                    <AutocompleteGBIF onValueSet={selectedScientificName} onUpdateScientificName={handleUpdateScientificName} onUpdateClassKing={handleClassKing} />
-                </div>
-
-                <hr />
-
-                {/* adds a new sub heading for the coordinates */}
-                <h1>Coordinates</h1>
-
-                {/* latitude input-group */}
-                <div className="input-group">
-                    <label htmlFor="latNumber">Latitude:</label>
-                    <input type="text" id="latNumber" name="latNumber" value={latitude || ''} onChange={(e) => setLatitude(e.target.value)} />
-                </div>
-
-                {/* longitude input-group */}
-                <div className="input-group">
-                    <label htmlFor="longNumber">Longitude:</label>
-                    <input type="text" id="longNumber" name="longNumber" value={longitude || ''} onChange={(e) => setLongitude(e.target.value)} />
-                </div>
-
-                <hr />
-
-                {/* adds a new sub heading for the Locality */}
-                <h1>Locality</h1>
-
-                {/* Country input-group */}
-                <div className="input-group">
-                    <label htmlFor="locCount">Country:</label>
-                    <input type="text" id="locCount" name="locCount" value={countryInput || ''} onChange={(e) => setCountryInput(e.target.value)} />
-                </div>
-
-                {/* Province input-group */}
-                <div className="input-group">
-                    <label htmlFor="locPro">Province:</label>
-                    <input type="text" id="locPro" name="locPro" value={provinceInput || ''} onChange={(e) => setProvinceInput(e.target.value)} />
-                </div>
-
-                {/* minor locality input-group */}
-                <div className="input-group">
-                    <label htmlFor="minLoc">City/Town:</label>
-                    <input type="text" id="minLoc" name="minLoc" value={cityInput || ''} onChange={(e) => setCityInput(e.target.value)} />
-                </div>
-
-                {/* precise locality input-group */}
-                <div className="input-group">
-                    <label htmlFor="preLoc">Precise Locality:</label>
-                    <input type="text" id="preLoc" name="preLoc" value={preciseInput || ''} onChange={(e) => setPreciseInput(e.target.value)} />
-                </div>
-
-                <br />
-                <br />
-
-                {/* this button is used to check all data and submit it to the database */}
-                <button onClick={handleCheckUpload}>finalise</button>
             </div>
         </div >
     );

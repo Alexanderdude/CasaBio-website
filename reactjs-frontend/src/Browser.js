@@ -9,10 +9,10 @@ function Browser() {
 
     //set all variables useStates
     const [primarySearchTerm, setPrimarySearchTerm] = useState('');
-    const [primarySearchType, setPrimarySearchType] = useState('Observations'); // Dropdown for primary search
+    const [primarySearchType, setPrimarySearchType] = useState('scientific_name'); // Dropdown for primary search
     const [filterOpen, setFilterOpen] = useState(false);
     const [filterSearchTerm, setFilterSearchTerm] = useState('');
-    const [filterSearchType, setFilterSearchType] = useState('Collections'); // Dropdown for filter search
+    const [filterSearchType, setFilterSearchType] = useState('collections'); // Dropdown for filter search
     const [searchData, setSearchData] = useState([]);
     const [page, setPage] = useState(1); // Current page number
     const perPage = 20; // Results per page (constant value)
@@ -116,10 +116,10 @@ function Browser() {
         // Ensure that the filter dropdown does not have the same value as the primary dropdown
         if (e.target.value === filterSearchType) {
             setFilterSearchType((prevFilterSearchType) => {
-                if (prevFilterSearchType === "Collections") {
-                    return "Observations";
+                if (prevFilterSearchType === "collections") {
+                    return "scientific_name";
                 } else {
-                    return "Collections";
+                    return "collections";
                 }
             });
         }
@@ -133,6 +133,7 @@ function Browser() {
 
     //handle the filter search text change
     const handleFilterSearchChange = (e) => {
+        
         //set the variable to the new value
         setFilterSearchTerm(e.target.value);
     };
@@ -146,10 +147,10 @@ function Browser() {
         // Ensure that the primary dropdown does not have the same value as the filter dropdown
         if (e.target.value === primarySearchType) {
             setPrimarySearchType((prevPrimarySearchType) => {
-                if (prevPrimarySearchType === "Collections") {
-                    return "Observations";
+                if (prevPrimarySearchType === "collections") {
+                    return "scientific_name";
                 } else {
-                    return "Collections";
+                    return "collections";
                 }
             });
         }
@@ -197,6 +198,12 @@ function Browser() {
         }
     };
 
+    const handleFieldGuides = () => {
+
+        navigate('/fieldGuide');
+
+    };
+
     return (
         <div className="search-page">
             {/* search page div */}
@@ -218,12 +225,11 @@ function Browser() {
 
                         {/* Displays options for the dropdown menu */}
                         <option value="scientific_name">Scientific Name</option>
-                        <option value="Collections">Collections</option>
-                        <option value="Photographers">Photographers</option>
-                        <option value="Collectors">Collectors</option>
+                        <option value="collections">Collections</option>
+                        <option value="photographers">Photographers</option>
+                        <option value="collectors">Collectors</option>
                         <option value="username">Username</option>
                         <option value="country">Country</option>
-                        <option value="city">City</option>
                     </select>
 
                     {/* Gets the users input for searching data */}
@@ -257,12 +263,11 @@ function Browser() {
 
                                 {/* Displays the options for the dropdown menu */}
                                 <option value="scientific_name">Scientific Name</option>
-                                <option value="Collections">Collections</option>
-                                <option value="Photographers">Photographers</option>
-                                <option value="Collectors">Collectors</option>
+                                <option value="collections">Collections</option>
+                                <option value="photographers">Photographers</option>
+                                <option value="collectors">Collectors</option>
                                 <option value="username">Username</option>
                                 <option value="country">Country</option>
-                                <option value="city">City</option>
                             </select>
 
                             {/* Gets the users input for the filter search bar */}
@@ -276,6 +281,12 @@ function Browser() {
                         </div>
                     )}
                 </div>
+
+                <br />
+
+                <span className="filter-button" onClick={handleFieldGuides}>
+                        View Field Guides:
+                </span>
 
                 <br />
                 <button className="search-button" onClick={handleSearch}>Search</button>
@@ -295,6 +306,7 @@ function Browser() {
                             <p>Kingdom: {row.kingdom}</p>
                             <p>Locality: {row.province}</p>
                             <p>Username: {row.username}</p>
+                            <p>Collection: {row.collections}</p>
                             <p>Collector: {row.collectors}</p>
                         </div>
                     </div>

@@ -1,0 +1,12 @@
+.image-row {
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    transition: border-color 0.3s ease; /* Add a smooth transition effect for the border color */
+  }
+  
+  /* Style for the hover effect (turn the border red) */
+  .image-row:hover {
+    border-color: red;
+  }

@@ -20,6 +20,7 @@ function MapModal({ show, onClose, longitudeInput, latitudeInput, accuracyInput,
     
     //define default variables positioned on Cape Town
     const [defCenter, setDefCenter] = useState([-33.9249, 18.4241]);
+    // eslint-disable-next-line
     const [defZoom, setDefZoom] = useState(10);
     const [sliderValue, setSliderValue] = useState(1);
       
@@ -104,6 +105,7 @@ function CustomMarker({ sliderValue, updateLatLng, handleTowProCou }) {
     const [circleRadius, setCircleRadius] = useState(null);
 
     // Create a memoized function for handleMarkerClick
+    // eslint-disable-next-line react-hooks/exhaustive-deps 
     const handleMarkerClick = useCallback(
         _.throttle((clickedPosition) => {
             // Fetch address data using OpenStreetMap Nominatim API
@@ -125,6 +127,7 @@ function CustomMarker({ sliderValue, updateLatLng, handleTowProCou }) {
                     console.error('Error fetching address data:', error);
                 });
         }, 2000), // Throttle for 2 seconds
+
         [handleTowProCou]
     );
 
