@@ -12,6 +12,7 @@ import Profile from './Profile';
 import Browser from './Browser';
 import ObservationPage from './observationView'; // Note the corrected import
 import NotFound from './NotFound';
+import FieldGuide from './Fieldguide';
 
 const App = () => {
   const { token, removeToken, setToken } = useToken();
@@ -27,7 +28,7 @@ const App = () => {
           path="/profile"
           element={token ? <Profile token={token} setToken={setToken} /> : <Navigate to="/login" />}
         />
-        <Route path="/upload" element={<UploadStep1 />} />
+        <Route path="/upload" element={token ? <UploadStep1 token={token} setToken={setToken} /> : <Navigate to="/login" />} />
         <Route
           path="/uploadStep2"
           element={token ? <UploadStep2 token={token} setToken={setToken} /> : <Navigate to="/login" />}
@@ -39,6 +40,7 @@ const App = () => {
         <Route path="/browse" element={<Browser />} />
         <Route path="/observation/:observationID" element={<ObservationPage />} /> 
         <Route path="*" element={<NotFound />} />
+        <Route path="/fieldGuide" element = {<FieldGuide />} />
       </Routes>
     </div>
   );

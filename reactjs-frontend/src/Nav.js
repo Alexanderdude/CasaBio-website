@@ -13,29 +13,29 @@ const Nav = (props) => {
     //post method to /logout api
     axios({
       method: "POST",
-      url:"/logout",
+      url: "/logout",
     })
 
-    //if successful, clear the token
-    .then((response) => {
-      props.token()
+      //if successful, clear the token
+      .then((response) => {
+        props.token()
 
-    //if unsuccessful, display error messages
-    }).catch((error) => {
-      if (error.response) {
-        console.log(error.response)
-        console.log(error.response.status)
-        console.log(error.response.headers)
+        //if unsuccessful, display error messages
+      }).catch((error) => {
+        if (error.response) {
+          console.log(error.response)
+          console.log(error.response.status)
+          console.log(error.response.headers)
         }
-    })
+      })
   }
 
   return (
     <nav className={styles.nav}>
-    {/* adds correct styles to nav component */}
+      {/* adds correct styles to nav component */}
 
       <ul className={styles.ul}>
-      {/* adds correct styles to the ul component */}
+        {/* adds correct styles to the ul component */}
 
         <li>
           <Link to="/" className={styles.link}>Home</Link>
@@ -50,12 +50,12 @@ const Nav = (props) => {
         <li>
           <Link to="/browse" className={styles.link}>Browser</Link>
           {/* adds a clickable link that navigates to the Browser Page */}
-          
+
         </li>
         <li>
           <Link to="/profile" className={styles.link}>Profile</Link>
           {/* adds a clickable link that navigates to the Browser Page */}
-          
+
         </li>
 
         <li>

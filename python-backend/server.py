@@ -16,6 +16,10 @@ import imagecodecs
 # Copyright (c) 2021-2023, Christoph Gohlke
 # All rights reserved. Licensed under the BSD 3-Clause License.
 import numpy as np
+from fuzzywuzzy import fuzz
+
+# Define your fuzzy search threshold (e.g., 60)
+threshold = 60
 
 # get the current directory of the python app
 current_directory = os.getcwd()
@@ -38,6 +42,7 @@ couch.resource.credentials = (couch_username, couch_password)
 
 db_signin = "signin"  #Get the database name database
 db_information = "information"
+db_profile = "profile"
 
 try:
     signInDB = couch.create(db_signin)  # Create a new database
@@ -49,6 +54,11 @@ try:
 except couchdb.http.PreconditionFailed as e:
     informationDB = couch[db_information]  # Access an existing database
 
+try:
+    profileDB = couch.create(db_profile)  # Create a new database
+except couchdb.http.PreconditionFailed as e:
+    profileDB = couch[db_profile]  # Access an existing database
+
 # Create a Flask web application instance
 app = Flask(__name__)
 
@@ -57,7 +67,7 @@ app.config["JWT_SECRET_KEY"] = "please-remember-to-change-me"
 jwt = JWTManager(app)
 
 #sets the time to refresh the access token
-app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=4)
 
 @app.after_request
 def refresh_expiring_jwts(response):
@@ -69,7 +79,7 @@ def refresh_expiring_jwts(response):
         #get the current timestamp with the correct timezone
         now = datetime.now(timezone.utc)
 
-        #calculate the target timestamp 30mins into the future
+        #calculate the target timestamp 
         target_timestamp = datetime.timestamp(now + timedelta(minutes=30))
 
         #checks if target is greater than the expire timestamp
@@ -190,6 +200,8 @@ def receive_image_data():
             mainImage = entry.get('mainImage')
             extraImages = entry.get('extraImage', [])
             extraImageIDs = entry.get('extraImageID', [])
+            tags = entry.get('tags',{})
+            subject = entry.get('subject',{})
             
              # Create a new document in the 'information' database
             new_document = {
@@ -209,7 +221,9 @@ def receive_image_data():
                 "city": city,
                 "preciseLocality": preciseLocality,
                 "mainImageID": mainImageID,
-                "extraImageID": extraImageIDs
+                "extraImageID": extraImageIDs,
+                "tags": tags,
+                "subject": subject
             }
 
             # Save the new document to the 'information' database
@@ -284,17 +298,47 @@ def logout():
 @jwt_required()
 def my_profile():
 
-    #data retrieved
-    response_body = {
-        "name": "Alex",
-        "about" :"Successful login page"
-    }
+    # Extracts the username from the access token
+    username = get_jwt_identity()
 
-    return response_body
+    # create a blank variable
+    results=[]
+
+    #cycles through each document with specific primary search fields and values
+    for doc in profileDB.find({'selector': {"Username": username}}):
+        
+        # adds each doc to the variable
+        results.append(doc)
+    
+    #returns the new variable
+    return jsonify(results), 200
+
+# Create a /editProfile route
+@app.route('/editProfile', methods=['POST'])
+def edit_profile():
+    # Get the data from the request
+    username = request.json.get('username')
+    field = request.json.get('field')
+    text = request.json.get('text')
+    
+    # Try to get the document with correct ID
+    try:
+        doc = profileDB.get(username)
+        if doc:
+        # Update and save the document
+            doc[field] = text
+            profileDB.save(doc)
+            return '', 200
+        else:
+            return '', 404  # Document not found
+    except Exception as e:
+        print(f"Error retrieving document: {e}")
+        return '', 500  # Return 500 for other errors
 
 
 @app.route('/register', methods=["POST"])
 def register_user():
+
     user_data = request.json
 
     # Ensure that the required fields are present in the request data
@@ -320,14 +364,57 @@ def register_user():
         "password": user_data['password'],
         "securityQuestion": user_data['securityQuestion']
     }
+
+    new_user_Profile = {
+        "Username": user_data['username'],
+        "About": ''
+    }
     
     doc_id, _ = signInDB.save(new_user_data)  # Save the document and get the generated document ID
 
+    profileDB.save(new_user_Profile) # Save the respective profile page for use
+    
     # Generate an access token for the new user
     access_token = create_access_token(identity=user_data['username'])
     response = {"access_token": access_token, "user_id": doc_id}
     
     return jsonify(response), 201  # Return a 201 (Created) status code
+
+@app.route('/singleSearch', methods=['POST'])
+def search_single():
+    try:
+        # Get the search criteria and pagination parameters from the request data
+        search_criteria = request.json
+        page = search_criteria['page']
+        per_page = search_criteria['per_page']
+
+        # Extract the search criteria from the dictionary
+        primary_searchTerm = search_criteria['primaryTerm']
+        primary_searchType = search_criteria['primaryType']
+        filter_searchTerm = search_criteria['filterTerm']
+
+        # Calculate the start and end index for pagination
+        start_idx = (page - 1) * per_page
+
+        # Checks if filter term is blank
+        if filter_searchTerm == '':
+
+            # create a blank variable
+            results=[]
+
+            #cycles through each document with specific primary search fields and values
+            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm}, 'skip':start_idx, 'limit':per_page}):
+                
+                # adds each doc to the variable
+                results.append(doc)
+            
+            #returns the new variable
+            return jsonify(results), 200
+        
+    except Exception as e:
+        # Handle any errors
+        print("Error:", str(e))
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/search', methods=['POST'])
 def search_database():
@@ -349,50 +436,68 @@ def search_database():
         # Check if primary_searchTerm is not provided
         if primary_searchTerm == '':
 
-            #create a new blank variable
-            results_blank=[]
-
-            # retrieve from all documents in couchDB between the pagination values
-            primary_results = informationDB.view('_all_docs', include_docs=True, skip=start_idx, limit=per_page)
+            # Query the view without specifying startkey and endkey
+            primary_results = informationDB.view('my_design_doc/my_custom_view', include_docs=True, skip=start_idx, limit=per_page)
             
             # Cycle through the documents and save it to a variable
             results_blank=[row.doc for row in primary_results]
 
             #return values
             return jsonify(results_blank), 200
+    
+
+        # create a blank variable
+        results=[]
         
-        # Checks if filter term is blank
-        if filter_searchTerm == '':
+        # Define the view name based on field_name
+        view_name = f'{primary_searchType}/filter_by_field_start_letter'
 
-            # create a blank variable
-            results=[]
+        # get the first letter
+        first_letter = primary_searchTerm[0].lower()
 
-            #cycles through each document with specific primary search fields and values
-            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm}, 'skip':start_idx, 'limit':per_page}):
-                
-                # adds each doc to the variable
-                results.append(doc)
+        # gets each document with first letter at scientific name
+        for doc in informationDB.view(view_name, include_docs=True, key=first_letter):
             
-            #returns the new variable
-            return jsonify(results), 200
+            # adds each doc to the variable
+            results.append(doc.value)
+        
+        # Calculate similarity for each document's scientific name
+        for doc in results:
+            similarity = fuzz.token_sort_ratio(doc[primary_searchType], primary_searchTerm)
+            doc['similarity'] = similarity
 
-        # If there are filter search criteria, narrow down the results
+        # Filter documents based on the threshold
+        filtered_results = [doc for doc in results if doc['similarity'] >= threshold]
+        
+        # Sort the filtered results from most accurate to least accurate
+        filtered_results.sort(key=lambda doc: doc['similarity'], reverse=True)
+
+        #check if filter term is not blank
         if filter_searchTerm != '':
 
-            #creates a blank filter variable
-            results_filter=[]
+            # Define an empty list to store the further filtered results
+            further_filtered_results = []
 
-            #cycles through each document with a specific primary and filter field and value
-            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm, filter_searchType:filter_searchTerm}, 'skip':start_idx, 'limit':per_page}):
-                
-                # adds the values to the variable
-                results_filter.append(doc)
+            # Set a threshold for fuzzy matching
+            fuzzy_threshold = 60  # Adjust the threshold as needed
 
-            #returns the variable 
-            return jsonify(results_filter), 200
+            # Iterate through the already filtered results
+            for doc in filtered_results:
+                # Check if the filter_searchType matches the document's field
+                if filter_searchType in doc:
+                    # Check if the document's field contains the filter_searchTerm with a fuzzy match
+                    if fuzz.partial_ratio(filter_searchTerm, doc[filter_searchType]) >= fuzzy_threshold:
+                        # If the fuzzy match is above the threshold, add the document to further_filtered_results
+                        further_filtered_results.append(doc)
+
+            # Return the further filtered results
+            return jsonify(further_filtered_results), 200
+
+        else:
+
+            #returns the new variable
+            return jsonify(filtered_results), 200
             
-        
-
     except Exception as e:
         # Handle any errors
         print("Error:", str(e))

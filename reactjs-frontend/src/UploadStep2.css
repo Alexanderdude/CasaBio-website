@@ -157,3 +157,24 @@ body {
 .left-section a:hover {
   text-decoration: underline; /* Add underline on hover */
 }
+
+/* Styling for image tags */
+.image-tag {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  /* Add a hover effect to underline the text */
+  cursor: pointer;
+  text-decoration: none;
+  transition: text-decoration 0.2s; /* Smooth underline transition */
+}
+
+/* Styling for image tags when hovered over */
+.image-tag:hover {
+  text-decoration: underline;
+}

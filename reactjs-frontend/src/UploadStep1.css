@@ -37,7 +37,9 @@
 
 /* Styling for the center section */
 .center-section {
+  display: flex;
   flex: 6; /* Flex layout to occupy 6/6th of available space */
+  flex-grow: 1;
   background-color: #fff; /* Background color */
   padding: 20px; /* Padding around content */
   box-sizing: border-box; /* Include padding and border in box size */
@@ -125,10 +127,11 @@ body {
 
 /* Styling for image cards */
 .img-card {
-  border: 3px solid rgb(95, 95, 95); /* Border style */
-  margin: 10px; /* Margin around image cards */
-  width: 306px; /* Width of image cards */
-  height: 306px; /* Height of image cards */
+  position: relative; /* Add relative positioning */
+  border: 3px solid rgb(95, 95, 95);
+  margin: 10px;
+  width: 306px;
+  height: 306px;
 }
 
 /* Styling for hovered image cards */
@@ -193,3 +196,23 @@ body {
   text-decoration: underline; /* Add underline on hover */
 }
 
+/* Styling for image tags */
+.image-tag {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  /* Add a hover effect to underline the text */
+  cursor: pointer;
+  text-decoration: none;
+  transition: text-decoration 0.2s; /* Smooth underline transition */
+}
+
+/* Styling for image tags when hovered over */
+.image-tag:hover {
+  text-decoration: underline;
+}

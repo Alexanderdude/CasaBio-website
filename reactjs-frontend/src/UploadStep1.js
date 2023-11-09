@@ -3,7 +3,9 @@ import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './UploadStep1.css';
 import { Container, Row, Col, Image, Modal, Button } from 'react-bootstrap';
-import { Link, useNavigate, useLocation} from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import Exif from 'exif-js';
+
 
 
 //define the UploadStep1 
@@ -13,9 +15,10 @@ const UploadStep1 = () => {
   const location = useLocation();
   const [uploadedImages, setUploadedImages] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+  const [selectedImageIndex, setSelectedImageIndex] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+
 
 
   useEffect(() => {
@@ -25,25 +28,45 @@ const UploadStep1 = () => {
   }, [location.state]);
 
   // Function to handle the dropped files
-  const handleDrop = (e) => {
-    e.preventDefault(); // Prevent the default behavior of opening the file
-    const files = e.dataTransfer.files; // Get the dropped files
-    const imageArray = []; // Initialize an array to store image files
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    const imageArray = [];
 
-    // Loop through the dropped files
     for (let i = 0; i < files.length; i++) {
-      const file = files[i]; // Get the current file
+      const file = files[i];
 
-      // Check if the file is of type image
       if (file.type.startsWith('image/')) {
         const imageUrl = URL.createObjectURL(file);
-        imageArray.push({ mainImage: imageUrl, extraImage: null });
+
+        // Wrap the Exif.getData function in a Promise
+        const exifData = await new Promise((resolve) => {
+          Exif.getData(file, function () {
+            const data = Exif.getAllTags(this);
+            resolve(data);
+          });
+        });
+
+        imageArray.push({
+          mainImage: imageUrl,
+          extraImage: null,
+          filename: file.name,
+          exifData: exifData,
+        });
       }
     }
 
-    // Update the state with the newly uploaded image files
-    setUploadedImages((prevImages) => [...prevImages, ...imageArray]);
+    // Concatenate the new images with the existing images, and then sort them by filename
+    setUploadedImages((prevImages) => {
+      const combinedImages = [...prevImages, ...imageArray];
+      return combinedImages.sort((a, b) => {
+        const filenameA = (a.filename || '').toLowerCase(); // Handle undefined or null filenames
+        const filenameB = (b.filename || '').toLowerCase(); // Handle undefined or null filenames
+        return filenameA.localeCompare(filenameB);
+      });
+    });
   };
+
 
   //hande the drag events
   const handleDragOver = (e) => {
@@ -59,37 +82,57 @@ const UploadStep1 = () => {
   };
 
   // Function to handle the file input change
-  const handleFileInputChange = (e) => {
-    const files = e.target.files; // Get the selected files from the input
-    const imageArray = []; // Initialize an array to store image files
+  const handleFileInputChange = async (e) => {
+    const files = e.target.files;
+    const imageArray = [];
 
-    // Loop through the selected files
     for (let i = 0; i < files.length; i++) {
-      const file = files[i]; // Get the current file
+      const file = files[i];
 
-      // Check if the file is of type image
       if (file.type.startsWith('image/')) {
         const imageUrl = URL.createObjectURL(file);
-        imageArray.push({ mainImage: imageUrl, extraImage: null });
+
+        // Wrap the Exif.getData function in a Promise
+        const exifData = await new Promise((resolve) => {
+          Exif.getData(file, function () {
+            const data = Exif.getAllTags(this);
+            resolve(data);
+          });
+        });
+
+        imageArray.push({
+          mainImage: imageUrl,
+          extraImage: null,
+          filename: file.name,
+          exifData: exifData,
+        });
       }
     }
 
-    // Update the state with the newly uploaded image files
-    setUploadedImages((prevImages) => [...prevImages, ...imageArray]);
+    setUploadedImages((prevImages) => {
+      const combinedImages = [...prevImages, ...imageArray];
+      return combinedImages.sort((a, b) => {
+        const filenameA = (a.filename || '').toLowerCase(); // Handle undefined or null filenames
+        const filenameB = (b.filename || '').toLowerCase(); // Handle undefined or null filenames
+        return filenameA.localeCompare(filenameB);
+      });
+    });
   };
 
 
-  //function to handle selected image
+
+  //function to handle selected image for fullview
   const handleClick = (image) => {
     setSelectedImage(image);
+    setShowModal(true);
   };
 
   //function to handle image click and change
   const handleImageClick = (index) => {
-    if (selectedImageIndex === index) {
-      setSelectedImageIndex(null); // Deselect the image if it's already selected
+    if (selectedImageIndex.includes(index)) {
+      setSelectedImageIndex(selectedImageIndex.filter((i) => i !== index)); // Deselect the image if it's already selected
     } else {
-      setSelectedImageIndex(index); // Select the image if it's not selected
+      setSelectedImageIndex([...selectedImageIndex, index]); // Select the image if it's not selected
     }
   };
 
@@ -98,82 +141,96 @@ const UploadStep1 = () => {
     setShowModal(false);
   };
 
-  // Function to handle image deletion
   const handleDelete = () => {
     if (selectedImageIndex !== null) {
-      // Create a new array by copying the uploadedImages array
-      const newArray = [...uploadedImages];
+      const confirmDeletion = window.confirm("Are you sure you want to delete the selected items?");
 
-      // Remove the image at the selectedImageIndex from the new array
-      newArray.splice(selectedImageIndex, 1);
+      if (confirmDeletion) {
+        // Create a new array by copying the uploadedImages array
+        const newArray = [...uploadedImages];
 
-      // Update the state with the new array, effectively removing the selected image
-      setUploadedImages(newArray);
+        // Sort selectedImageIndex in descending order
+        const sortedIndices = [...selectedImageIndex].sort((a, b) => b - a);
 
-      // Reset the selectedImageIndex after successful deletion
-      setSelectedImageIndex(null);
+        sortedIndices.forEach(index => {
+          if (index >= 0 && index < newArray.length) {
+            newArray.splice(index, 1);
+          }
+        });
+
+        // Update the state with the new array, effectively removing the selected images
+        setUploadedImages(newArray);
+
+        // Reset the selectedImageIndex after successful deletion
+        setSelectedImageIndex([]);
+      }
     } else {
       console.error('selectedImageIndex is null.');
     }
   };
 
 
+
   // Function to handle rotating the selected image to the right
   const handleRotateRight = () => {
-    // Check if an image is selected
     if (selectedImageIndex !== null) {
       // Create a copy of the uploaded images array
       const newArray = [...uploadedImages];
-      // Get the selected image from the copied array
-      const rSelectedImage = newArray[selectedImageIndex].mainImage;
 
-      // Create an img element and load the selected image
-      const imgElement = document.createElement("img");
-      imgElement.src = rSelectedImage;
+      selectedImageIndex.forEach(index => {
+        if (index >= 0 && index < newArray.length) {
+          // Get the selected image from the copied array
+          const rSelectedImage = newArray[index].mainImage;
 
-      // Create a canvas object
-      const canvas = document.createElement("canvas");
+          // Create an img element and load the selected image
+          const imgElement = document.createElement("img");
+          imgElement.src = rSelectedImage;
 
-      // Wait till the image is loaded
-      imgElement.onload = function () {
-        // Call the rotateImage function
-        rotateImage();
-        // Call the saveImage function with the original image name
-        saveImage(rSelectedImage.name);
-      };
+          // Create a canvas object
+          const canvas = document.createElement("canvas");
 
-      // Rotate the image and draw it on the canvas
-      const rotateImage = () => {
-        // Create canvas context
-        const ctx = canvas.getContext("2d");
-        // Set canvas dimensions
-        canvas.width = imgElement.height;
-        canvas.height = imgElement.width;
-        // Translate context to rotate around center
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        // Rotate the image by 90 degrees (PI/2 radians)
-        ctx.rotate(Math.PI / 2);
-        // Draw the rotated image on the canvas
-        ctx.drawImage(imgElement, -imgElement.width / 2, -imgElement.height / 2);
-      };
+          // Wait until the image is loaded
+          imgElement.onload = function () {
+            // Call the rotateImage function
+            rotateImage();
+            // Call the saveImage function with the original image name
+            saveImage(rSelectedImage.name, index);
+          };
 
-      // Save the rotated image
-      const saveImage = (img_name) => {
-        // Convert canvas to a Blob
-        canvas.toBlob((blob) => {
-          // Create a new File object with the rotated Blob
-          const updatedImage = new File([blob], img_name, {
-            type: "image/png",
-          });
-          // Replace the selected image in the copied array
-          newArray[selectedImageIndex].mainImage = URL.createObjectURL(updatedImage);
-          // Update the uploadedImages state with the new array
-          setUploadedImages(newArray);
-        }, "image/png");
-      };
+          // Rotate the image and draw it on the canvas
+          const rotateImage = () => {
+            // Create canvas context
+            const ctx = canvas.getContext("2d");
+            // Set canvas dimensions
+            canvas.width = imgElement.height;
+            canvas.height = imgElement.width;
+            // Translate context to rotate around the center
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            // Rotate the image by 90 degrees (PI/2 radians)
+            ctx.rotate(Math.PI / 2);
+            // Draw the rotated image on the canvas
+            ctx.drawImage(imgElement, -imgElement.width / 2, -imgElement.height / 2);
+          };
+
+          // Save the rotated image
+          const saveImage = (img_name, imgIndex) => {
+            // Convert canvas to a Blob
+            canvas.toBlob((blob) => {
+              // Create a new File object with the rotated Blob
+              const updatedImage = new File([blob], img_name, {
+                type: "image/png",
+              });
+              // Replace the selected image in the copied array
+              newArray[imgIndex].mainImage = URL.createObjectURL(updatedImage);
+              // Update the uploadedImages state with the new array
+              setUploadedImages(newArray);
+            }, "image/png");
+          };
+        }
+      });
 
       // Reset selectedImageIndex after the rotation
-      setSelectedImageIndex(null);
+      setSelectedImageIndex([]);
     } else {
       console.error('selectedImageIndex is null.');
     }
@@ -181,60 +238,63 @@ const UploadStep1 = () => {
 
   // Function to handle flipping the selected image horizontally
   const handleFlip = () => {
-    // Check if an image is selected
     if (selectedImageIndex !== null) {
       // Create a copy of the uploaded images array
       const newArray = [...uploadedImages];
-      // Get the selected image from the copied array
-      const selectedImage = newArray[selectedImageIndex].mainImage;
 
-      // Create an img element and load the selected image
-      const imgElement = document.createElement("img");
-      imgElement.src = selectedImage;
+      selectedImageIndex.forEach(index => {
+        if (index >= 0 && index < newArray.length) {
+          // Get the selected image from the copied array
+          const rSelectedImage = newArray[index].mainImage;
 
-      // Create a canvas object
-      const canvas = document.createElement("canvas");
+          // Create an img element and load the selected image
+          const imgElement = document.createElement("img");
+          imgElement.src = rSelectedImage;
 
-      // Wait till the image is loaded
-      imgElement.onload = function () {
-        // Call the flipImage function
-        flipImage();
-        // Call the saveImage function with the original image name
-        saveImage(selectedImage.name);
-      };
+          // Create a canvas object
+          const canvas = document.createElement("canvas");
 
-      // Flip the image and draw it on the canvas
-      const flipImage = () => {
-        // Create canvas context
-        const ctx = canvas.getContext("2d");
-        // Set canvas dimensions
-        canvas.width = imgElement.width;
-        canvas.height = imgElement.height;
-        // Translate and scale context to flip horizontally
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        // Draw the flipped image on the canvas
-        ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
-      };
+          // Wait until the image is loaded
+          imgElement.onload = function () {
+            // Call the rotateImage function
+            flipImage();
+            // Call the saveImage function with the original image name
+            saveImage(rSelectedImage.name, index);
+          };
 
-      // Save the flipped image
-      const saveImage = (img_name) => {
-        // Convert canvas to a Blob
-        canvas.toBlob((blob) => {
-          // Create a new File object with the flipped Blob
-          const flippedImage = new File([blob], img_name, {
-            type: selectedImage.type,
-            lastModified: selectedImage.lastModified,
-          });
-          // Replace the selected image in the copied array
-          newArray[selectedImageIndex].mainImage = URL.createObjectURL(flippedImage);
-          // Update the uploadedImages state with the new array
-          setUploadedImages(newArray);
-        }, selectedImage.type);
-      };
+          // Flip the image and draw it on the canvas
+          const flipImage = () => {
+            // Create canvas context
+            const ctx = canvas.getContext("2d");
+            // Set canvas dimensions
+            canvas.width = imgElement.width;
+            canvas.height = imgElement.height;
+            // Translate and scale context to flip horizontally
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            // Draw the flipped image on the canvas
+            ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+          };
 
-      // Reset selectedImageIndex after the flip
-      setSelectedImageIndex(null);
+          // Save the rotated image
+          const saveImage = (img_name, imgIndex) => {
+            // Convert canvas to a Blob
+            canvas.toBlob((blob) => {
+              // Create a new File object with the rotated Blob
+              const updatedImage = new File([blob], img_name, {
+                type: "image/png",
+              });
+              // Replace the selected image in the copied array
+              newArray[imgIndex].mainImage = URL.createObjectURL(updatedImage);
+              // Update the uploadedImages state with the new array
+              setUploadedImages(newArray);
+            }, "image/png");
+          };
+        }
+      });
+
+      // Reset selectedImageIndex after the rotation
+      setSelectedImageIndex([]);
     } else {
       console.error('selectedImageIndex is null.');
     }
@@ -243,58 +303,64 @@ const UploadStep1 = () => {
 
   // Function to handle rotating the selected image to the left
   const handleRotateLeft = () => {
-    // Check if an image is selected
     if (selectedImageIndex !== null) {
       // Create a copy of the uploaded images array
       const newArray = [...uploadedImages];
-      // Get the selected image from the copied array
-      const rSelectedImage = newArray[selectedImageIndex].mainImage;
 
-      // Create an img element and load the selected image
-      const imgElement = document.createElement("img");
-      imgElement.src = rSelectedImage;
+      selectedImageIndex.forEach(index => {
+        if (index >= 0 && index < newArray.length) {
+          // Get the selected image from the copied array
+          const rSelectedImage = newArray[index].mainImage;
 
-      // Create a canvas object
-      const canvas = document.createElement("canvas");
+          // Create an img element and load the selected image
+          const imgElement = document.createElement("img");
+          imgElement.src = rSelectedImage;
 
-      // Wait till the image is loaded
-      imgElement.onload = function () {
-        // Call the rotateImage function
-        rotateImage();
-        // Call the saveImage function with the original image name
-        saveImage(rSelectedImage.name);
-      };
+          // Create a canvas object
+          const canvas = document.createElement("canvas");
 
-      // Rotate the image and draw it on the canvas
-      const rotateImage = () => {
-        // Create canvas context
-        const ctx = canvas.getContext("2d");
-        // Set canvas dimensions (swap width and height for rotation)
-        canvas.width = imgElement.height;
-        canvas.height = imgElement.width;
-        ctx.translate(canvas.width / 2, canvas.height / 2);
-        // Rotate the image and draw it on the canvas
-        ctx.rotate(-Math.PI / 2);
-        ctx.drawImage(imgElement, -imgElement.width / 2, -imgElement.height / 2);
-      };
+          // Wait until the image is loaded
+          imgElement.onload = function () {
+            // Call the rotateImage function
+            rotateImage();
+            // Call the saveImage function with the original image name
+            saveImage(rSelectedImage.name, index);
+          };
 
-      // Save the rotated image
-      const saveImage = (img_name) => {
-        // Convert canvas to a Blob
-        canvas.toBlob((blob) => {
-          // Create a new File object with the rotated Blob
-          const updatedImage = new File([blob], img_name, {
-            type: "image/png", // Change the MIME type if needed
-          });
-          // Replace the selected image in the copied array
-          newArray[selectedImageIndex].mainImage = URL.createObjectURL(updatedImage);
-          // Update the uploadedImages state with the new array
-          setUploadedImages(newArray);
-        }, "image/png"); // Adjust the MIME type as needed
-      };
+          // Rotate the image and draw it on the canvas
+          const rotateImage = () => {
+            // Create canvas context
+            const ctx = canvas.getContext("2d");
+            // Set canvas dimensions
+            canvas.width = imgElement.height;
+            canvas.height = imgElement.width;
+            // Translate context to rotate around the center
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            // Rotate the image by 90 degrees (PI/2 radians)
+            ctx.rotate(-Math.PI / 2);
+            // Draw the rotated image on the canvas
+            ctx.drawImage(imgElement, -imgElement.width / 2, -imgElement.height / 2);
+          };
+
+          // Save the rotated image
+          const saveImage = (img_name, imgIndex) => {
+            // Convert canvas to a Blob
+            canvas.toBlob((blob) => {
+              // Create a new File object with the rotated Blob
+              const updatedImage = new File([blob], img_name, {
+                type: "image/png",
+              });
+              // Replace the selected image in the copied array
+              newArray[imgIndex].mainImage = URL.createObjectURL(updatedImage);
+              // Update the uploadedImages state with the new array
+              setUploadedImages(newArray);
+            }, "image/png");
+          };
+        }
+      });
 
       // Reset selectedImageIndex after the rotation
-      setSelectedImageIndex(null);
+      setSelectedImageIndex([]);
     } else {
       console.error('selectedImageIndex is null.');
     }
@@ -398,7 +464,7 @@ const UploadStep1 = () => {
           <li><Link to="/Upload">Step 1 - Adding Observations</Link> </li>
           {/* Displays a clickable link to step 1*/}
 
-          <li onClick = {handleSubmit}>Step 2 - Grouping Observations</li>
+          <li onClick={handleSubmit}>Step 2 - Grouping Observations</li>
           {/* Displays a clickable link to step 2*/}
 
         </ol>
@@ -430,12 +496,16 @@ const UploadStep1 = () => {
               <Col md={4} key={index} >
                 {/* Sets a max of 4 images for each row */}
 
-                <div className={`img-card ${selectedImageIndex === index ? 'image-checked' : ''}`}
-                  onClick={() => { handleImageClick(index); handleClick(data.mainImage) }}>
+                <div className={`img-card ${selectedImageIndex.includes(index) ? 'image-checked' : ''}`}
+                  onClick={() => { handleImageClick(index); }}>
                   {/* Adds img-card styling to each image and image-checked styling to the image that was selected */}
 
                   <Image src={data.mainImage} style={{ width: '300px', height: '300px' }} thumbnail />
                   {/* Displays each image to the correct size */}
+
+                  <div className="image-tag" onClick={(e) => { e.stopPropagation(); handleClick(data.mainImage) }}>
+                    Fullscreen
+                  </div>
 
                 </div>
               </Col>
@@ -502,26 +572,17 @@ const UploadStep1 = () => {
         <h2>Functions</h2>
         {/* Heading for this section */}
 
-        <button onClick={() => setShowModal(true)} disabled={selectedImageIndex === null}>View</button>
-        {/* Displays the selected image by dislpaying the modal */}
-
         <button onClick={handleRotateLeft} disabled={selectedImageIndex === null}>Rotate Left</button>
         {/* Handles the rotate left function when the button is clicked */}
 
         <button onClick={handleRotateRight} disabled={selectedImageIndex === null}>Rotate Right</button>
         {/* Handles the rotate right function when the button is clicked */}
 
-        <button onClick={handleFlip} disabled={selectedImageIndex === null}>Flip selected image</button>
+        <button onClick={handleFlip} disabled={selectedImageIndex === null}>Flip selected images</button>
         {/* Handles the flip function when the button is clicked */}
 
-        <button onClick={(handleDelete)} disabled={selectedImageIndex === null}>Delete selected image</button>
+        <button onClick={(handleDelete)} disabled={selectedImageIndex === null}>Delete selected images</button>
         {/* Handles the delete function when the button is clicked */}
-
-        <span>Selected image location:</span>
-        <span id="folderlocation">
-          {selectedImageIndex !== null && uploadedImages[selectedImageIndex] && uploadedImages[selectedImageIndex].name}
-        </span>
-        {/* Displays the selected image URL for ease of use */}
 
         <button onClick={handleSubmit} disabled={uploadedImages && uploadedImages.length === 0}>Submit and Continue</button>
         {/* Handles the submit function when the button is clicked */}
