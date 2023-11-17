@@ -335,7 +335,6 @@ def edit_profile():
         print(f"Error retrieving document: {e}")
         return '', 500  # Return 500 for other errors
 
-
 @app.route('/register', methods=["POST"])
 def register_user():
 

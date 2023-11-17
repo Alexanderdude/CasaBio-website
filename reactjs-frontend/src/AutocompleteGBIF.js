@@ -32,6 +32,8 @@ const AutocompleteGBIF = ({ onValueSet, onUpdateScientificName, onUpdateClassKin
                     `https://api.gbif.org/v1/species/suggest?q=${inputValue}&limit=5`
                 );
 
+                console.log(response);
+
                 // Extract and trim the name from suggestion data
                 const fetchedSuggestions = response.data.map((item) => {
                     const nameParts = item.scientificName.split(','); // Split name and date
@@ -69,10 +71,6 @@ const AutocompleteGBIF = ({ onValueSet, onUpdateScientificName, onUpdateClassKin
             if (detailedInfo.results && detailedInfo.results.length > 0) {
                 const firstResult = detailedInfo.results[0];
                 onUpdateClassKing(firstResult.class, firstResult.kingdom);
-                //console.log('Family:', firstResult.family);
-                //console.log('Genus:', firstResult.genus);
-                //console.log('Order:', firstResult.order);
-                //console.log('Phylum:', firstResult.phylum);
             }
         } catch (error) {
 
