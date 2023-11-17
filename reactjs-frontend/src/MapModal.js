@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Modal, Button } from 'react-bootstrap';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, Circle } from 'react-leaflet';
 import "leaflet/dist/leaflet.css";
-import './MapModal.css';
 import Search from './Search';
 import L from 'leaflet';
 import { OpenStreetMapProvider } from 'leaflet-geosearch';
@@ -61,7 +60,7 @@ function MapModal({ show, onClose, longitudeInput, latitudeInput, accuracyInput,
             </Modal.Header>
             <Modal.Body>
                 <div>
-                    <MapContainer center={defCenter} zoom={defZoom}>
+                    <MapContainer center={defCenter} zoom={defZoom} style={{ height: '60vh '}}>
                         {/* Displays the Leaflet map container with the declared position variables */}
 
                         <TileLayer
