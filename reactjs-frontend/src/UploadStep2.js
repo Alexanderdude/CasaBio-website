@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import './UploadStep2.css';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Image, Modal, Button } from 'react-bootstrap';
+import { Container, Row, Col, Image, Modal } from 'react-bootstrap';
 
 const UploadStep2 = () => {
 
@@ -133,42 +133,44 @@ const UploadStep2 = () => {
 
   //Function to disband entire group selected
   const handleUngroupGroup = () => {
+
     //checks if the selected image doesnt have any extra images
-    if (imageData[selectedImageIndex[0]].extraImage === null || imageData[selectedImageIndex[0]].extraImage === '') {
-      if (!window.confirm('Please select a group and try again.')) {
+    if (!Array.isArray(selectedImageIndex) || selectedImageIndex.length !== 1 || imageData[selectedImageIndex[0]].extraImage === null || imageData[selectedImageIndex[0]].extraImage === '') {
+      if (!window.confirm('Please select a single group and try again.')) {
         return;
       }
-    }
+    } else {
 
-    //declare variables
-    const mainIndex = selectedImageIndex[0];
-    const extraImages = imageData[mainIndex]?.extraImage || [];
-    const newImageData = [...imageData];
+      //declare variables
+      const mainIndex = selectedImageIndex[0];
+      const extraImages = imageData[mainIndex]?.extraImage || [];
+      const newImageData = [...imageData];
 
-    // Move the extra images back to main images
-    extraImages.forEach((extraImage, index) => {
-      //for each index in the imageData array
-      for (let i = 0; i < newImageData.length; i++) {
-        //if the imageData has a empty mainImage then
-        if (!newImageData[i].mainImage) {
+      // Move the extra images back to main images
+      extraImages.forEach((extraImage, index) => {
+        //for each index in the imageData array
+        for (let i = 0; i < newImageData.length; i++) {
+          //if the imageData has a empty mainImage then
+          if (!newImageData[i].mainImage) {
 
-          //set the extraImage value as the new mainImage
-          newImageData[i].mainImage = extraImage;
+            //set the extraImage value as the new mainImage
+            newImageData[i].mainImage = extraImage;
 
-          //clear the old extraImage value
-          newImageData[mainIndex].extraImage[index] = null;
+            //clear the old extraImage value
+            newImageData[mainIndex].extraImage[index] = null;
 
-          break; // Exit the loop after finding the first empty mainImage
+            break; // Exit the loop after finding the first empty mainImage
+          }
         }
-      }
-    });
+      });
 
-    // Remove extra images array 
-    newImageData[mainIndex].extraImage = null;
+      // Remove extra images array 
+      newImageData[mainIndex].extraImage = null;
 
-    //set the new array as ImageData
-    setImageData(newImageData);
-    setSelectedImageIndex([mainIndex]);
+      //set the new array as ImageData
+      setImageData(newImageData);
+      setSelectedImageIndex([mainIndex]);
+    }
   };
 
   //Function to delete an image from group
@@ -585,7 +587,7 @@ const UploadStep2 = () => {
     const dateParts = inputDate.split(' '); // Split the input into date and time
     const date = dateParts[0].replace(/:/g, '-'); // Format date part
     const time = dateParts[1]; // Time remains the same
-  
+
     const formattedDateStr = date + 'T' + time;
     const dateObj = new Date(formattedDateStr); //formattedDate as a Date variable
 
@@ -594,7 +596,7 @@ const UploadStep2 = () => {
     } else {
       // Invalid date format
       return NaN;
-      
+
     }
   };
 
@@ -603,10 +605,10 @@ const UploadStep2 = () => {
     const confirmDeletion = window.confirm(
       "This will autogroup your observations based on the time each picture was taken. Are you sure you want to do this?"
     );
-  
+
     if (confirmDeletion) {
       const updatedImageData = [...imageData]; // Create a copy of the imageData
-  
+
       // Iterate through the updatedImageData
       for (let i = 0; i < updatedImageData.length; i++) {
 
@@ -617,7 +619,7 @@ const UploadStep2 = () => {
         if (currentImage.exifData && currentImage.exifData.DateTimeOriginal) {
           const currentTimestamp = new Date(formatDate(currentImage.exifData.DateTimeOriginal));
           const imagesWithin3Minutes = [];
-  
+
           //iterate through the updatedImageData again
           for (let j = 0; j < updatedImageData.length; j++) {
 
@@ -638,7 +640,7 @@ const UploadStep2 = () => {
               }
             }
           }
-  
+
           // Add images within 3 minutes to the extraImage array of the current image
           if (imagesWithin3Minutes.length > 0) {
             if (!currentImage.extraImage) {
@@ -652,200 +654,237 @@ const UploadStep2 = () => {
       setImageData(updatedImageData)
     }
   };
-  
 
 
 
-return (
-  <div className="upload-step-two-container">
 
-    {/* Left Section Container upload steps*/}
-    <div className="left-section">
-      <h2>Upload Steps:</h2>
-      <ol>
-        {/* displays the links to the different steps */}
-        <li onClick={() => handleProcessing('false')}>Step 1 - Adding Observations</li>
-        <li>Step 2 - Grouping Observations</li>
-        <li onClick={() => handleProcessing('true')}>Step 3 - Adding Information</li>
-      </ol>
-    </div>
+  return (
+    <div className="upload-step-two-container">
 
-    {/* Center Section Container with Image View*/}
-    <div className="center-section">
+      {/* Left Section Container upload steps*/}
+      <div className="left-section">
+        <h2>UPLOAD STEPS:</h2>
+        <ol>
+          {/* displays the links to the different steps */}
+          <li onClick={() => handleProcessing('false')}>Step 1:{'\n'}Adding Observations</li>
+          <li>Step 2:{'\n'}Grouping Observations</li>
+          <li onClick={() => handleProcessing('true')}>Step 3:{'\n'}Adding Information</li>
+        </ol>
+      </div>
 
-      {/* display the heading for this form */}
-      <h2>Group Images</h2>
+      {/* Center Section Container with Image View*/}
+      <div className="center-section">
 
-      {/* sets a container for all the images */}
-      <Container>
-        <Row>
-          {/* maps through the imageData and displays each image */}
-          {imageData.length > 0 ? (
-            imageData.map((data, index) => (
-              data.mainImage && (
-                <Col md={4} key={index}>
-                  <div
+        {/* display the heading for this form */}
+        <h2>GROUP IMAGES</h2>
 
-                    className={`img-card ${selectedImageIndex.includes(index) ? 'image-checked' : ''} ${data.extraImage && data.extraImage.length > 0 ? 'grouped-img-card' : ''}`}
-                    onClick={() => handleImageClick(index)}
-                  >
-                    <Image src={data.mainImage} style={{ width: '300px', height: '300px' }} thumbnail />
-
-                    <div className="image-tag" onClick={(e) => { e.stopPropagation(); handleClick(data.mainImage) }}>
-                      Fullscreen
-                    </div>
-
-                  </div>
-                  {/* sets a size for each image. also adds specific styling if the image is a group or a selected image */}
-
-                </Col>
-              )
-            ))
-          ) : (
-            <Col>
-              {/* displays a text if imageData has no images */}
-              <p>No images uploaded yet.</p>
-            </Col>
-          )}
-        </Row>
-      </Container>
-    </div>
-
-    {/* Right Section Container with buttons*/}
-    <div className="right-section">
-      <h2>Functions:</h2>
-      {/* Displays the different buttons and disables some if no image is selected */}
-      <button onClick={handleRotateRight}>Rotate Right</button>
-      <button onClick={handleRotateLeft}>Rotate Left</button>
-      <button onClick={handleFlip}>Flip Image(s)</button>
-      <button onClick={handleDelete}>Delete selected image or group</button>
-      <button onClick={handleViewGroup} disabled={selectedImageIndex.length !== 1}>View selected group</button>
-      <button onClick={handleGroupImages}>Merge selected images</button>
-      <button onClick={handleUngroupGroup} disabled={selectedImageIndex.length !== 1}>Ungroup selected group</button>
-      <button onClick={handleAutoGroup}>Autogroup Images</button>
-      <button onClick={() => handleProcessing('true')}>Submit and Continue</button>
-    </div>
-
-    {/* Display Modal Section */}
-    <Modal
-      show={viewGroupModalShow}
-      onHide={() => setViewGroupModalShow(false)}
-      size="lg"
-      centered
-    >
-      {/* adds a close button to the modal */}
-      <Modal.Header closeButton>
-
-        {/* adds a heading for the modal */}
-        <Modal.Title>View Group</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-
-        {/* adds an image container to the modal */}
+        {/* sets a container for all the images */}
         <Container>
-          <Row>
-            <Col md={6}>
+          <Row >
+            {/* maps through the imageData and displays each image */}
+            {imageData.length > 0 ? (
+              imageData.map((data, index) => (
+                data.mainImage && (
+                  <Col xs={10} md={6} lg={4} key={index}>
+                    <div
+                      className={`img-card ${selectedImageIndex.includes(index) ? 'image-checked' : ''} ${data.extraImage && data.extraImage.length > 0 ? 'grouped-img-card' : ''}`}
+                      onClick={() => handleImageClick(index)}
+                    >
+                      <Image src={data.mainImage} style={{ width: '300px', height: '300px' }} thumbnail />
+                      <div className="image-tag" onClick={(e) => { e.stopPropagation(); handleClick(data.mainImage) }}>
+                        Fullscreen
+                      </div>
 
-              {/* adds styling to the selected image */}
-              <div className={`img-card ${currentMainImageIndex === 0 ? 'image-checked' : ''}`}>
+                    </div>
+                    {/* sets a size for each image. also adds specific styling if the image is a group or a selected image */}
 
-                {/* displays the mainImage value */}
-                <Image
-                  src={imageData[selectedImageIndex[0]]?.mainImage}
-                  style={{ width: '300px', height: '300px', cursor: 'pointer' }}
-                  thumbnail
-                  onClick={() => setCurrentMainImageIndex(0)}
-                />
-
-              </div>
-            </Col>
-
-            {/* checks if the main image has extra images */}
-            {imageData[selectedImageIndex[0]]?.extraImage?.map((extraImage, imageIndex) => (
-              <Col md={6} key={imageIndex}>
-
-                {/* adds styling to the selected images */}
-                <div className={`img-card ${currentMainImageIndex === imageIndex + 1 ? 'image-checked' : ''}`}>
-
-                  {/* displays each extra image */}
-                  <Image
-                    src={extraImage}
-                    style={{ width: '300px', height: '300px', cursor: 'pointer' }}
-                    thumbnail
-                    onClick={() => setCurrentMainImageIndex(imageIndex + 1)}
-                  />
-                </div>
+                  </Col>
+                )
+              ))
+            ) : (
+              <Col>
+                {/* displays a text if imageData has no images */}
+                <p>No images uploaded yet.</p>
               </Col>
-            ))}
-          </Row>
-          <Row>
-            <Col md={12}>
-              {/* adds different buttons to do specific functions */}
-              <Button variant="primary" onClick={handleMainImageChange}>
-                Set as Main Image
-              </Button>
-              <Button variant="primary" onClick={handleSingleImageDelete}>
-                Remove selected Image
-              </Button>
-            </Col>
+            )}
           </Row>
         </Container>
-      </Modal.Body>
-    </Modal>
+      </div>
 
-    {/* Display Modal with multiple functions */}
-    <Modal show={showModal !== false} onHide={() => {
-      handleCloseModal();
-      resetImagePosition(); // Reset image position when the modal is closed
-    }} centered>
-      <Modal.Header closeButton>
-        <Modal.Title>Full View</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {selectedImage && (
-          <div
-            style={{
-              ...modalContentStyle,
-              width: '100%',
-              height: '100%',
-              // Adds some styling to the image div
-            }}
+      {/* Right Section Container with buttons*/}
+      <div className="right-section">
+        <h2>FUNCTIONS:</h2>
+        {/* Displays the different buttons and disables some if no image is selected */}
+        <button onClick={handleRotateRight}>Rotate Right</button>
+        <button onClick={handleRotateLeft}>Rotate Left</button>
+        <button onClick={handleFlip}>Flip Image(s)</button>
+        <button onClick={handleDelete}>Delete selected image or group</button>
+        <br />
+        <button onClick={handleViewGroup} disabled={selectedImageIndex.length !== 1}>View selected group</button>
+        <button onClick={handleGroupImages}>Group selected images</button>
+        <button onClick={handleAutoGroup}>Autogroup Images</button>
+        <button onClick={handleUngroupGroup}>Ungroup selected group</button>
+        <br/>
+        <button onClick={() => handleProcessing('true')}>Submit and Continue</button>
+      </div>
 
-            // Adds dome functions to the mouse down and mouse move
-            onMouseDown={handleImageMouseDown}
-            onMouseMove={handleImageMouseMove}
-            onMouseUp={handleImageMouseUp}
-          >
-            {/* Adds the image itself to the image div container */}
-            <img
-              src={selectedImage}
+      {/* Display Modal Section */}
+      <Modal
+        show={viewGroupModalShow}
+        onHide={() => setViewGroupModalShow(false)}
+        className='modal-style'
+        size="lg"
+        centered
+      >
+        {/* adds a close button to the modal */}
+        <Modal.Header closeButton>
+
+          {/* adds a heading for the modal */}
+          <Modal.Title>View Group</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+
+          {/* adds an image container to the modal */}
+          <Container>
+            <Row>
+              <Col md={6}>
+
+                {/* adds styling to the selected image */}
+                <div className={`img-card ${currentMainImageIndex === 0 ? 'image-checked' : ''}`}>
+
+                  {/* displays the mainImage value */}
+                  <Image
+                    src={imageData[selectedImageIndex[0]]?.mainImage}
+                    style={{ width: '300px', height: '300px', cursor: 'pointer' }}
+                    thumbnail
+                    onClick={() => setCurrentMainImageIndex(0)}
+                  />
+
+                </div>
+              </Col>
+
+              {/* checks if the main image has extra images */}
+              {imageData[selectedImageIndex[0]]?.extraImage?.map((extraImage, imageIndex) => (
+                <Col md={6} key={imageIndex}>
+
+                  {/* adds styling to the selected images */}
+                  <div className={`img-card ${currentMainImageIndex === imageIndex + 1 ? 'image-checked' : ''}`}>
+
+                    {/* displays each extra image */}
+                    <Image
+                      src={extraImage}
+                      style={{ width: '300px', height: '300px', cursor: 'pointer' }}
+                      thumbnail
+                      onClick={() => setCurrentMainImageIndex(imageIndex + 1)}
+                    />
+                  </div>
+                </Col>
+              ))}
+            </Row>
+            <Row>
+              <Col md={12}>
+                {/* adds different buttons to do specific functions */}
+                <button style={{
+                  backgroundColor: '#919312',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  padding: '10px 20px',
+                }} onClick={handleMainImageChange}>
+                  Set as Main Image
+                </button>
+                <button onClick={handleSingleImageDelete} style={{
+                  backgroundColor: '#919312',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  padding: '10px 20px',
+                }}>
+                  Remove selected Image
+                </button>
+              </Col>
+            </Row>
+          </Container>
+        </Modal.Body>
+      </Modal>
+
+      {/* Display Modal with multiple functions */}
+      <Modal show={showModal !== false} onHide={() => {
+        handleCloseModal();
+        resetImagePosition(); // Reset image position when the modal is closed
+      }}
+        centered
+        className='modal-style'
+        size='lg'>
+        <Modal.Header closeButton>
+          <Modal.Title>Full View</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedImage && (
+            <div
               style={{
-                width: `${zoomLevel * 100}%`,
-                transform: `translate(${imagePositionX}px, ${imagePositionY}px)`,
+                ...modalContentStyle,
+                width: '100%',
+                height: '100%',
+                // Adds some styling to the image div
               }}
-              alt="Full View"
-              draggable="false"
-            />
-          </div>
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={() => {
-          handleCloseModal(); // Close the modal when the user clicks this button
-          resetImagePosition();
-        }}>
-          Close
-        </Button>
-        {/* adds a secondary close button to this modal */}
-        <div className="zoom-controls">
-          <button onClick={handleZoomIn}>Zoom In</button>
-          <button onClick={handleZoomOut}>Zoom Out</button>
-        </div>
-      </Modal.Footer>
-    </Modal>
 
-  </div>
-);
+              // Adds dome functions to the mouse down and mouse move
+              onMouseDown={handleImageMouseDown}
+              onMouseMove={handleImageMouseMove}
+              onMouseUp={handleImageMouseUp}
+            >
+              {/* Adds the image itself to the image div container */}
+              <img
+                src={selectedImage}
+                style={{
+                  width: `${zoomLevel * 100}%`,
+                  transform: `translate(${imagePositionX}px, ${imagePositionY}px)`,
+                }}
+                alt="Full View"
+                draggable="false"
+              />
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <div style={{ width: '100%' }}>
+            <div style={{ display: 'flex' }}>
+              <button style={{
+                backgroundColor: '#919312',
+                color: '#ffffff',
+                borderRadius: '10px',
+                padding: '10px 20px',
+              }} onClick={handleZoomIn}>
+                Zoom In
+              </button>
+
+              <button style={{
+                backgroundColor: '#919312',
+                color: '#ffffff',
+                borderRadius: '10px',
+                padding: '10px 20px',
+              }} onClick={handleZoomOut}>
+                Zoom Out
+              </button>
+            </div>
+          </div>
+          <button variant="secondary" onClick={() => {
+            handleCloseModal(); // Close the modal when the user clicks this button
+            resetImagePosition();
+          }}
+            style={{
+              backgroundColor: '#919312',
+              color: '#ffffff',
+              borderRadius: '10px',
+              padding: '10px 20px',
+              marginTop: '10px' // Adds some space between Zoom buttons and Close button
+            }}>
+            Close
+          </button>
+        </Modal.Footer>
+      </Modal>
+
+    </div>
+  );
 };
 
 export default UploadStep2;

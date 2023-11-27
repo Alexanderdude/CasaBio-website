@@ -2,8 +2,12 @@
 
 /* Styling for the navigation bar itself */
 nav {
-  background-color: #9a9898; /* Set the background color */
+  background-color: #EFEFEF; /* Set the background color */
   padding: 10px; /* Add padding around the navigation bar */
+  background-image: url('../../IMG_2338.PNG');
+  background-size: cover; /* This property ensures that the background image covers the entire element */
+  background-repeat: no-repeat; /* Prevents the background image from repeating */
+  background-position: center center;
 }
 
 /* Styling for the ul containing navigation items */
@@ -20,10 +24,13 @@ li {
   margin: 0; /* Reset margin for list items */
 }
 
+
+
 /* Styling for links within list items */
 li a {
   text-decoration: none; /* Remove underlines from links */
-  color: #333; /* Set link text color */
+  color: #ffffff; /* Set link text color */
+  border: 2px;
   padding: 5px 10px; /* Add padding around link text */
   border-bottom: 2px solid transparent; /* Add a transparent bottom border for decoration */
   transition: border-color 0.3s; /* Apply a smooth transition effect to border color changes */
@@ -35,7 +42,14 @@ li:not(:last-child) {
 }
 
 /* Styling when hovering over link items */
-li a:hover {
-  border-color: #333; /* Add a border color when hovering over links */
-  color: #333; /* Change link text color when hovering */
+li a:hover { 
+  color: #73dab5; /* Change link text color when hovering */
+}
+
+span {
+  color:#ffffff /* your default color */;
+}
+
+span:hover {
+  color: #73dab5; /* Change link text color when hovering */
 }

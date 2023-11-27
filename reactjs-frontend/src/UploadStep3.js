@@ -1,6 +1,6 @@
 //import different libraries and modules
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Image } from 'react-bootstrap';
 import './UploadStep3.css';
 import MapModal from './MapModal';
@@ -647,18 +647,18 @@ function UploadStep3(props) {
 
             {/* left container */}
             <div className="upload-step-left">
-                <h2>Upload Steps:</h2>
+                <h2>UPLOAD STEPS:</h2>
                 <ol>
                     {/* links to different forms */}
-                    <li onClick={() => handleSendBackStep1(selectedImageIndex)}>Step 1 - Adding Observations</li>
-                    <li onClick={() => handleSendBackStep2(selectedImageIndex)}>Step 2 - Grouping Observations</li>
-                    <li><Link to="/UploadStep3">Step 3 - Adding Information</Link></li>
+                    <li onClick={() => handleSendBackStep1(selectedImageIndex)}>Step 1:{'\n'}Adding Observations</li>
+                    <li onClick={() => handleSendBackStep2(selectedImageIndex)}>Step 2:{'\n'}Grouping Observations</li>
+                    <li>Step 3:{'\n'}Adding Information</li>
                 </ol>
             </div>
             <div className="upload-step-center">
 
                 {/* center section heading */}
-                <h2>Add Information</h2>
+                <h2>ADD INFORMATION</h2>
 
                 {/* button to open the map modal */}
                 <button onClick={handleMapModalOpen} >Open Maps for selected image</button>
@@ -682,7 +682,7 @@ function UploadStep3(props) {
                         {imageData.length > 0 ? (
                             imageData.map((data, index) => (
                                 data.mainImage && (
-                                    <Col md={4} key={index}>
+                                    <Col xs={10} md={6} lg={4} key={index}>
                                         {/* adds styling to the selected image and grouped images */}
                                         <div
                                             className={`img-card ${selectedImageIndex === index ? 'image-checked' : ''} ${data.extraImage && data.extraImage.length > 0 ? 'grouped-img-card' : ''}`}
@@ -713,7 +713,7 @@ function UploadStep3(props) {
             {/* define the right container for the upload step */}
             <div className="upload-step-right">
                 <div className="scrollable-content">
-                    <h1>Basic Info</h1>
+                    <h2>BASIC INFO</h2>
 
                     {/* adds the user name here */}
                     <p id="username">User name: {username}</p>

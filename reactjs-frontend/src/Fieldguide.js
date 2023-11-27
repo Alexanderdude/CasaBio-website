@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import './Fieldguide.css';
+import { useNavigate } from 'react-router-dom';
 import { Modal, Button } from 'react-bootstrap';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -16,6 +17,7 @@ function Fieldguide() {
     const [page, setPage] = useState(1);
     const [showLoadMore, setShowLoadMore] = useState(false);
     const [center, setCenter] = useState([-33.9249, 18.4241])
+    const navigate = useNavigate();
 
     // Function to get place ID based on locality
     const getPlaceID = async (locality) => {
@@ -215,8 +217,8 @@ function Fieldguide() {
     const handleImageRowClick = (index, e) => {
         // Check if the click target is the map container or its descendants
         if (!e.target.closest('.leaflet-container')) {
-            // Handle the click on the image row
-            console.log(fieldguides[index]); //if dragged out leaflet container then causes click FIX
+            // Navigate to the desired page using the navigate function
+            navigate('/fieldGuide/' + fieldguides[index].speciesName);
         }
     };
 

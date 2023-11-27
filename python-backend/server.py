@@ -103,6 +103,27 @@ def refresh_expiring_jwts(response):
         # Case where there is not a valid JWT. Just return the original respone
         return response
     
+#create a /token api point
+@app.route('/token', methods=["POST"])
+def create_token():
+
+    #get the username and password from the json request data 
+    username = request.json.get("username", None)
+    password = request.json.get("password", None)
+
+    # Query the view for the username and password combination
+    result = signInDB.view('auth/Auth', key=[username, password])
+
+    # Check if a matching entry is found in the view
+    if result:
+        # If a matching entry is found, generate an access token
+        access_token = create_access_token(identity=username)
+        response = {"access_token": access_token}
+        return response
+
+    # If no matching entry is found, return an error
+    return {"msg": "Wrong username or password"}, 401    
+
 #create an API that receives information required for the uploadStep3 page
 @app.route('/informationStep3', methods=['POST'])
 def recieve_information_data():
@@ -262,28 +283,6 @@ def get_image():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-
-#create a /token api point
-@app.route('/token', methods=["POST"])
-def create_token():
-
-    #get the username and password from the json request data 
-    username = request.json.get("username", None)
-    password = request.json.get("password", None)
-
-    # Query the view for the username and password combination
-    result = signInDB.view('auth/Auth', key=[username, password])
-
-    # Check if a matching entry is found in the view
-    if result:
-        # If a matching entry is found, generate an access token
-        access_token = create_access_token(identity=username)
-        response = {"access_token": access_token}
-        return response
-
-    # If no matching entry is found, return an error
-    return {"msg": "Wrong username or password"}, 401
-
 #create a /logout api point
 @app.route("/logout", methods=["POST"])
 def logout():
@@ -294,7 +293,7 @@ def logout():
     return response
 
 #create a /profile api point with a jwt required decorator
-@app.route('/profile')
+@app.route('/profile', methods=["GET"])
 @jwt_required()
 def my_profile():
 
@@ -313,6 +312,23 @@ def my_profile():
     #returns the new variable
     return jsonify(results), 200
 
+#create a /profile api point with a jwt required decorator
+@app.route('/userprofile', methods=['GET'])
+def public_profile():
+
+    username = request.args.get('name')
+
+    # create a blank variable
+    results=[]
+
+    #cycles through each document with specific primary search fields and values
+    for doc in profileDB.find({'selector': {"Username": username}}):
+        
+        # adds each doc to the variable
+        results.append(doc)
+    
+    #returns the new variable
+    return jsonify(results), 200
 # Create a /editProfile route
 @app.route('/editProfile', methods=['POST'])
 def edit_profile():
