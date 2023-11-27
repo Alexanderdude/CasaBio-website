@@ -3,9 +3,15 @@
   min-height: 100vh;
 }
 
+.upload-step-left h2 {
+  margin-bottom: 10px; /* Margin below heading */
+  color: #ffffff;
+  font-family: Geneva !important;
+}
+
 .upload-step-left {
   flex: 1;
-  background-color: #f2f2f2;
+  background-color: #114734;
   padding: 20px;
   box-sizing: border-box;
 }
@@ -18,14 +24,28 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  overflow: auto;
+}
+
+.upload-step-center h2 {
+  color: #402412;
+  font-family: Geneva !important;
+  font-weight: bold;
+  font-size: 40px;
 }
 
 .upload-step-right {
   flex: 1;
-  background-color: #f2f2f2;
+  background-color: #114734;
   padding: 20px;
   box-sizing: border-box;
   align-items: flex-start;
+}
+
+.upload-step-right h2 {
+  margin-bottom: 10px; /* Margin below heading */
+  color: #ffffff;
+  font-family: Geneva !important;
 }
 
 .scrollable-content {
@@ -42,10 +62,6 @@
   border-radius: 4px;
 }
 
-.upload-step-left h2 {
-  margin-bottom: 10px;
-}
-
 .upload-step-left ol {
   margin: 0;
   padding: 0;
@@ -55,10 +71,12 @@
 .upload-step-left li {
   margin-bottom: 10px;
   cursor: pointer;
+  color: #ffffff;
 }
 
 .upload-step-left li:hover {
   text-decoration: underline;
+  color: #73dab5;
 }
 
 .checkbox-container {

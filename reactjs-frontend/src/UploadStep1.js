@@ -2,11 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './UploadStep1.css';
-import { Container, Row, Col, Image, Modal, Button } from 'react-bootstrap';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Container, Row, Col, Image, Modal } from 'react-bootstrap';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Exif from 'exif-js';
-
-
 
 //define the UploadStep1 
 const UploadStep1 = () => {
@@ -18,8 +16,6 @@ const UploadStep1 = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-
-
 
   useEffect(() => {
     if (location.state && location.state.singleImageData) {
@@ -66,7 +62,6 @@ const UploadStep1 = () => {
       });
     });
   };
-
 
   //hande the drag events
   const handleDragOver = (e) => {
@@ -168,8 +163,6 @@ const UploadStep1 = () => {
       console.error('selectedImageIndex is null.');
     }
   };
-
-
 
   // Function to handle rotating the selected image to the right
   const handleRotateRight = () => {
@@ -383,21 +376,13 @@ const UploadStep1 = () => {
 
 
   const handleZoomIn = () => {
-    // Reset image position when zooming
-    setImagePositionX(0);
-    setImagePositionY(0);
-
     // Limit the zoom level to a reasonable maximum value (e.g., 4x)
     if (zoomLevel < 4) {
       setZoomLevel(zoomLevel + 0.5);
     }
   };
-
-  const handleZoomOut = () => {
-    // Reset image position when zooming
-    setImagePositionX(0);
-    setImagePositionY(0);
-
+  
+  const handleZoomOut = () => { 
     // Limit the zoom level to a reasonable minimum value (e.g., 1x)
     if (zoomLevel > 1) {
       setZoomLevel(zoomLevel - 0.5);
@@ -450,23 +435,19 @@ const UploadStep1 = () => {
     setZoomLevel(1);
   };
 
-
-
-
   return (
     <div className="upload-step-one-container">
 
       {/* Left Section Container Display Upload Steps*/}
       <div className="left-section">
-        <h2>Upload Steps:</h2>
+        <h2>UPLOAD STEPS:</h2>
         {/* Displays the links to the different upload steps*/}
         <ol>
-          <li><Link to="/Upload">Step 1 - Adding Observations</Link> </li>
+          <li>Step 1:{'\n'}Adding Observations</li>
           {/* Displays a clickable link to step 1*/}
 
-          <li onClick={handleSubmit}>Step 2 - Grouping Observations</li>
+          <li onClick={handleSubmit}>Step 2:{'\n'}Grouping Observations</li>
           {/* Displays a clickable link to step 2*/}
-
         </ol>
       </div>
 
@@ -479,7 +460,7 @@ const UploadStep1 = () => {
         style={{ width: '100%', border: '1px dashed #ccc' }}
       > {/* Center Section Container to display images and handle all the drag and drop events */}
 
-        <h2>Upload Images</h2>
+        <h2>UPLOAD IMAGES</h2>
         {/* Heading for this container */}
 
         <input type="file" multiple onChange={handleFileInputChange} />
@@ -493,7 +474,7 @@ const UploadStep1 = () => {
             {/* Maps out the array of images to display them in this container */}
             {uploadedImages.map((data, index) => (
 
-              <Col md={4} key={index} >
+              <Col xs={10} md={6} lg={4} key={index} >
                 {/* Sets a max of 4 images for each row */}
 
                 <div className={`img-card ${selectedImageIndex.includes(index) ? 'image-checked' : ''}`}
@@ -518,7 +499,8 @@ const UploadStep1 = () => {
         <Modal show={showModal !== false} onHide={() => {
           handleCloseModal();
           resetImagePosition(); // Reset image position when the modal is closed
-        }} centered>
+        }} centered className='modal-style'
+          size="lg">
           <Modal.Header closeButton>
             <Modal.Title>Full View</Modal.Title>
           </Modal.Header>
@@ -551,17 +533,40 @@ const UploadStep1 = () => {
             )}
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => {
+            <div style={{ width: '100%' }}>
+              <div style={{ display: 'flex' }}>
+                <button style={{
+                  backgroundColor: '#919312',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  padding: '10px 20px',
+                }} onClick={handleZoomIn}>
+                  Zoom In
+                </button>
+
+                <button style={{
+                  backgroundColor: '#919312',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  padding: '10px 20px',
+                }} onClick={handleZoomOut}>
+                  Zoom Out
+                </button>
+              </div>
+            </div>
+            <button variant="secondary" onClick={() => {
               handleCloseModal(); // Close the modal when the user clicks this button
               resetImagePosition();
-            }}>
+            }}
+              style={{
+                backgroundColor: '#919312',
+                color: '#ffffff',
+                borderRadius: '10px',
+                padding: '10px 20px',
+                marginTop: '10px' // Adds some space between Zoom buttons and Close button
+              }}>
               Close
-            </Button>
-            {/* adds a secondary close button to this modal */}
-            <div className="zoom-controls">
-              <button onClick={handleZoomIn}>Zoom In</button>
-              <button onClick={handleZoomOut}>Zoom Out</button>
-            </div>
+            </button>
           </Modal.Footer>
         </Modal>
 
@@ -569,7 +574,7 @@ const UploadStep1 = () => {
 
       {/* Right Section Container with Buttons*/}
       <div className="right-section">
-        <h2>Functions</h2>
+        <h2>FUNCTIONS</h2>
         {/* Heading for this section */}
 
         <button onClick={handleRotateLeft} disabled={selectedImageIndex === null}>Rotate Left</button>

@@ -13,13 +13,21 @@ import Browser from './Browser';
 import ObservationPage from './observationView'; // Note the corrected import
 import NotFound from './NotFound';
 import FieldGuide from './Fieldguide';
+import IndividualFieldGuide from './IndivFieldGuide';
+import PublicProfile from './PublicProfile'
 
 const App = () => {
   const { token, removeToken, setToken } = useToken();
 
+  const tokenProps = {
+    token,
+    removeToken,
+    setToken,
+  };
+
   return (
     <div>
-      <Nav token={removeToken} />
+      <Nav tokenProps={tokenProps} />
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -38,9 +46,11 @@ const App = () => {
           element={token ? <UploadStep3 token={token} setToken={setToken} /> : <Navigate to="/login" />}
         />
         <Route path="/browse" element={<Browser />} />
-        <Route path="/observation/:observationID" element={<ObservationPage />} /> 
+        <Route path="/observation/:observationID" element={<ObservationPage />} />
         <Route path="*" element={<NotFound />} />
-        <Route path="/fieldGuide" element = {<FieldGuide />} />
+        <Route path="/fieldGuide" element={<FieldGuide />} />
+        <Route path="/fieldGuide/:speciesName" element={<IndividualFieldGuide />} />
+        <Route path='/profile/:name' element={<PublicProfile />} />
       </Routes>
     </div>
   );
