@@ -1,0 +1,101 @@
+.login-page {
+    background-image: url('../../../Login.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+    /* Set to 100vh to cover the entire viewport height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+}
+
+.centered h1 {
+    color: white;
+    font-family: Geneva !important;
+}
+
+.login {
+    width: 350px;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #114734;
+    color: white
+}
+
+.form-group {
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.login-button {
+    width: 100%;
+    padding: 10px;
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.login-button:hover {
+    background-color: #20694f;
+    color: #ffffff;
+}
+
+.password-strength {
+    display: inline-block;
+    margin-left: 10px;
+    padding: 5px 10px;
+    font-size: 12px;
+    border-radius: 3px;
+    color: #040404;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.login-text {
+    color: rgb(255, 255, 255);
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #a2a2a2;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #a2a2a2;
+}

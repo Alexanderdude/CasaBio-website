@@ -1,0 +1,81 @@
+.app-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .header {
+    background-color: #333;
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+  }
+  
+  .content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    width: 100%;
+    padding: 20px;
+  }
+  
+  .image-section {
+    flex: 1;
+  }
+  
+  .extra-images img {
+    display: block;
+    margin-top: 10px;
+    max-width: 100%;
+  }
+  
+  .info-section {
+    flex: 2;
+    padding: 20px;
+  }
+  
+  .info-row {
+    margin-bottom: 20px;
+  }
+
+  /* Add this CSS to your stylesheet to style the bordered box */
+.bordered-box {
+  border: 2px solid #333;
+  width: 50vw; /* 50% of the viewport width */
+  height: 50vh; /* 25% of the viewport height */
+  overflow: hidden; /* Hide any overflowing content */
+  position: relative; /* Make it a positioned container for absolute elements */
+}
+
+/* Style for the map container within the bordered box */
+.bordered-box .map-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Styling for ObservationView component */
+.observation-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Add this class to the QuarterSquareGrid component */
+.bordered-map {
+  border: 2px solid #333;
+  width: 100%; /* Adjust as needed */
+  height: 100%; /* Adjust as needed */
+  position: relative;
+}
+
+/* Center the map within the bordered box */
+.centered-map {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+  

@@ -1,0 +1,309 @@
+/* Styling for the main container */
+.upload-step-one-container {
+  display: flex; /* Use flex layout */
+  min-height: 100vh; /* Minimum height of 100 viewport height units */
+}
+
+/* Styling for the left section */
+.left-section {
+  flex: 1; /* Flex layout to occupy 1/6th of available space */
+  background-color: #114734 !important; /* Background color */
+  padding: 20px; /* Padding around content */
+  box-sizing: border-box; /* Include padding and border in box size */
+  }
+
+/* Styling for headings within the left section */
+.left-section h2 {
+  margin-bottom: 10px; /* Margin below heading */
+  color: #ffffff;
+  font-family: Geneva !important;
+}
+
+.left-section a:hover {
+  color: #73dab5 !important/* your desired hover color */;
+  text-decoration: underline !important; /* Add underline on hover */
+}
+
+.left-section a {
+  color: #ffffff !important/* your desired color */;
+}
+
+/* Styling for ordered lists within the left section */
+.left-section ol {
+  margin: 0; /* Reset margin */
+  padding: 0; /* Reset padding */
+  list-style: none; /* Remove list bullets */
+}
+
+/* Styling for list items within the left section */
+.left-section li {
+  margin-bottom: 10px; /* Margin between list items */
+  cursor: pointer; /* Change cursor on hover */
+  color: #ffffff;
+}
+
+/* Styling for list items within the left section on hover */
+.left-section li:hover {
+  color: #73dab5;
+}
+
+.center-section h2 {
+  color: #402412;
+  font-family: Geneva !important;
+  font-weight: bold;
+  font-size: 40px;
+}
+
+/* Styling for the center section */
+.center-section {
+  display: flex;
+  flex: 6; /* Flex layout to occupy 6/6th of available space */
+  flex-grow: 1;
+  background-color: #EFEFEF; /* Background color */
+  padding: 20px; /* Padding around content */
+  box-sizing: border-box; /* Include padding and border in box size */
+  display: flex; /* Flex layout for children */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center; /* Center children horizontally */
+  overflow: auto;
+}
+
+/* Styling for headings within the center section */
+.center-section h2 {
+  margin-bottom: 20px; /* Margin below heading */
+}
+
+/* Styling for the drop area */
+.drop-area {
+  padding: 20px; /* Padding around content */
+  text-align: center; /* Center text */
+  cursor: pointer; /* Change cursor on hover */
+}
+
+/* Styling for paragraphs within the drop area */
+.drop-area p {
+  margin: 5px 0; /* Margin top and bottom */
+}
+
+/* Styling for hidden input elements within the drop area */
+.drop-area input {
+  display: none; /* Hide input element */
+}
+
+/* Styling for the image container */
+.image-container {
+  margin-top: 20px; /* Margin on top */
+  display: flex; /* Flex layout for children */
+  flex-wrap: wrap; /* Allow wrapping of images */
+  justify-content: center; /* Center content horizontally */
+  max-height: 300px; /* Set maximum container height */
+  overflow-y: auto; /* Add vertical scroll for overflow */
+}
+
+/* Styling for image previews within the container */
+.image-preview {
+  margin: 5px; /* Margin around each preview */
+  width: 100px; /* Width of image preview */
+  height: 100px; /* Height of image preview */
+  object-fit: cover; /* Scale image to cover container */
+}
+
+/* Styling for headings within the left section */
+.right-section h2 {
+  margin-bottom: 10px; /* Margin below heading */
+  color: #ffffff;
+  font-family: Geneva !important;
+}
+
+/* Styling for the right section */
+.right-section {
+  flex: 1; /* Flex layout to occupy 1/6th of available space */
+  background-color: #114734 !important; /* Background color */
+  padding: 20px; /* Padding around content */
+  box-sizing: border-box; /* Include padding and border in box size */
+  display: flex; /* Flex layout for children */
+  flex-direction: column; /* Stack children vertically */
+  align-items: center; /* Center children horizontally */
+}
+
+/* Styling for headings within the right section */
+.right-section h2 {
+  margin-bottom: 20px; /* Margin below heading */
+}
+
+/* Styling for buttons within the right section */
+.right-section button {
+  margin-bottom: 10px; /* Margin below buttons */
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: '10px' !important;
+  padding: 10px 20px !important;
+}
+
+.right-section button:hover {
+  background-color:#7bbed74a !important;
+  color: #ffffff;
+}
+
+.modal-style {
+  background-image: url('../../../IMG_2338.PNG');
+  background-size: cover; /* This property ensures that the background image covers the entire element */
+  background-repeat: no-repeat; /* Prevents the background image from repeating */
+  background-position: center center;
+}
+
+/* Styling for the 'folderlocation' id */
+#folderlocation {
+  font-weight: bold; /* Set font weight to bold */
+}
+
+/* Reset default body styles */
+body {
+  margin: 0; /* Remove default margin */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif; /* Set font family */
+  -webkit-font-smoothing: antialiased; /* Apply font smoothing on WebKit browsers */
+  -moz-osx-font-smoothing: grayscale; /* Apply font smoothing on macOS browsers */
+}
+
+/* Styling for image cards */
+.img-card {
+  position: relative; /* Add relative positioning */
+  border: 3px solid #8D5B4C !important; 
+  margin: 10px;
+  width: 306px;
+  height: 306px;
+}
+
+/* Styling for hovered image cards */
+.img-card:hover {
+  border: 3px solid #5FBD4A !important; /* Border color on hover */
+}
+
+/* Styling for selected image cards */
+.img-card.image-checked {
+  border: 3px solid #5FBD4A !important; /* Border color for selected image */
+  /* Add a red border to the selected image */
+}
+
+/* Styling for popup container */
+.popup-container {
+  position: fixed; /* Fixed position */
+  top: 0; /* Position from the top edge */
+  left: 0; /* Position from the left edge */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent black background */
+  display: flex; /* Flex layout for children */
+  align-items: center; /* Center content vertically */
+  justify-content: center; /* Center content horizontally */
+  z-index: 999; /* Make sure popup is on top */
+}
+
+/* Styling for custom popup content */
+.popup-content {
+  max-width: 80%; /* Maximum width */
+  max-height: 80%; /* Maximum height */
+  overflow: hidden; /* Hide overflow */
+  position: relative; /* Relative positioning for content */
+  background-color: #fff; /* Background color */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Box shadow */
+}
+
+/* Styling for images within popup content */
+.popup-content img {
+  display: block; /* Display as block element */
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  object-fit: contain; /* Fit within container */
+}
+
+/* Styling for close button within popup content */
+.close-button {
+  position: absolute; /* Absolute positioning */
+  top: 10px; /* Position from the top edge */
+  right: 10px; /* Position from the right edge */
+}
+
+/* Styling for links within the left section */
+.left-section a {
+  color: black; /* Link text color */
+  text-decoration: none; /* Remove underlines */
+  transition: underline 0.2s; /* Smooth underline transition */
+}
+
+/* Styling for links within the left section on hover */
+.left-section a:hover {
+  text-decoration: underline; /* Add underline on hover */
+}
+
+/* Styling for image tags */
+.image-tag {
+  background-color: rgba(0, 0, 0, 0.7);
+  color: white;
+  position: absolute;
+  bottom: 5px;
+  left: 5px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  /* Add a hover effect to underline the text */
+  cursor: pointer;
+  text-decoration: none;
+  transition: text-decoration 0.2s; /* Smooth underline transition */
+}
+
+/* Styling for image tags when hovered over */
+.image-tag:hover {
+  text-decoration: underline;
+}
+
+.loading-indicator {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(182, 182, 182, 0.938);
+  padding: 10px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.spinner {
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-top: 4px solid #3498db; /* Change the color to your liking */
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+  margin-left: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.zoom-slider-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.zoom-slider-container label {
+  margin-bottom: 5px;
+}
+
+.react-resizable-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  bottom: 0;
+  right: 0;
+  background-color: #4285f4;
+  cursor: se-resize;
+}
+

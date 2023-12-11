@@ -1,0 +1,131 @@
+.upload-step-container {
+  display: flex;
+  min-height: 100vh;
+  color: #ffffff;
+}
+
+.upload-step-left h2 {
+  margin-bottom: 10px;
+  /* Margin below heading */
+  color: #ffffff;
+  font-family: Geneva !important;
+}
+
+.upload-step-left {
+  flex: 1;
+  background-color: #114734;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.upload-step-center {
+  flex: 6;
+  background-color: #fff;
+  padding: 20px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: auto;
+}
+
+.upload-step-center h2 {
+  color: #402412;
+  font-family: Geneva !important;
+  font-weight: bold;
+  font-size: 40px;
+}
+
+.upload-step-right {
+  flex: 1;
+  background-color: #114734;
+  padding: 25px;
+  box-sizing: border-box;
+  align-items: flex-start;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 100vh;
+}
+
+.upload-step-right h2 {
+  margin-bottom: 10px;
+  /* Margin below heading */
+  color: #ffffff;
+  font-family: Geneva !important;
+}
+
+.upload-step-right select,
+.upload-step-right input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.upload-step-left ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upload-step-left li {
+  margin-bottom: 10px;
+  cursor: pointer;
+  color: #ffffff;
+}
+
+.upload-step-left li:hover {
+  text-decoration: underline;
+  color: #73dab5;
+}
+
+.checkbox-container {
+  display: table;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 5px;
+  border: 1px solid #dadada;
+  /* Add a border style here */
+  padding: 10px;
+  /* Add padding to create space inside the border */
+}
+
+.checkbox-input {
+  display: table-cell;
+  vertical-align: middle;
+  padding-right: 10px;
+  /* Optional: Add some space between checkbox and label */
+}
+
+/* Styling for buttons within the right section */
+.upload-step-center button {
+  margin-bottom: 10px;
+  /* Margin below buttons */
+  background-color: #919312;
+  color: #000000;
+  border-radius: '10px' !important;
+  padding: 10px 20px !important;
+}
+
+.upload-step-center button:hover {
+  background-color: #20694f !important;
+  color: #ffffff;
+}
+
+.finalise-button {
+  margin-bottom: 10px;
+  /* Margin below buttons */
+  background-color: #ffffff;
+  color: #000000;
+  border-radius: '10px';
+  padding: 10px 20px;
+}
+
+.finalise-button:hover {
+  background-color: #7bbed74a;
+  color: #ffffff;
+}

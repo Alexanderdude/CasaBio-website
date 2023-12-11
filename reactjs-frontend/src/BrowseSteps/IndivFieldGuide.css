@@ -1,0 +1,76 @@
+/* Style for the main field guide page container */
+.fieldGuide-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.fieldguide-content {
+    background-color: white;
+    width: 650px;
+    border-radius: 5px;
+}
+
+/* Styling for image tags */
+.image-tag {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    position: absolute;
+    bottom: 5px;
+    left: 5px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: text-decoration 0.2s;
+}
+
+/* Styling for image tags when hovered over */
+.image-tag:hover {
+    text-decoration: underline;
+}
+
+/* Style for the map container */
+.map-container {
+    width: 604px;
+    border: 2px solid #ddd;
+}
+
+.image-area-fieldguide {
+    position: relative; /* Add relative positioning */
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+    margin-left: 25px;
+}
+
+.text-content-fieldguide {
+    padding: 10px; /* Add padding for spacing */
+    box-sizing: border-box; /* Include padding and borders within the width */
+    
+}
+
+.image-and-text-container-fieldguide {
+    display: flex;
+    margin: 0 auto; /* Center the container within its parent */
+}
+
+.taxonomic-rank {
+    margin: 0;
+    padding: 0;
+    margin-top: 2px !important; /* You can adjust the margin-top value as needed */
+}
+.taxonomic-rank:hover {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.fieldguide-heading {
+    color: #402412 !important;
+    font-family: Geneva !important;
+    font-weight: bold;
+    font-size: 40px;
+}
+

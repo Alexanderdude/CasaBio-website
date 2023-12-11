@@ -1,0 +1,46 @@
+/* AutocompleteGBIF.css */
+.autocomplete-container {
+    position: relative;
+  }
+  
+  .dropdown {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+  }
+  
+  .input-group {
+    margin-bottom: 20px;
+  }
+  
+  .dropdown-content {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    max-height: 150px;
+    overflow-y: auto;
+    width: 100%;
+    z-index: 1;
+    color: black !important
+  }
+  
+  .dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .dropdown-item.selected {
+    background-color: #f0f0f0;
+  }
+  
+  #sciName {
+    width: 100%;
+    resize: vertical;
+    height: auto;
+    white-space: normal; /* Allow wrapping */
+    overflow-wrap: break-word; /* Break words to new lines */
+  }
+  

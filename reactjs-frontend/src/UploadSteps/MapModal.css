@@ -1,0 +1,8 @@
+/* sets the leaflet map size to 60% of visible screen */
+.leaflet-container {
+  height: 500px;
+  width: 100%;
+}
+.slider-value {
+  color: black;
+}

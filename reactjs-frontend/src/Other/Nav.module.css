@@ -1,0 +1,53 @@
+/* Styles for the navigation bar */
+
+/* Styling for the navigation bar itself */
+nav {
+  background-color: #EFEFEF; /* Set the background color */
+  padding: 10px; /* Add padding around the navigation bar */
+  background-image: url('../../../IMG_2338.PNG');
+  background-size: cover; /* This property ensures that the background image covers the entire element */
+  background-repeat: no-repeat; /* Prevents the background image from repeating */
+  background-position: center center;
+}
+
+/* Styling for the ul containing navigation items */
+ul {
+  list-style: none; /* Remove default list bullet points */
+  display: flex; /* Use flexbox to create a horizontal layout */
+  justify-content: flex-start; /* Align items to the start of the flex container */
+  padding: 0; /* Remove padding from the list */
+  margin: 0; /* Remove margin from the list */
+}
+
+/* Styling for each li in the navigation */
+li {
+  margin: 0; /* Reset margin for list items */
+}
+
+/* Styling for links within list items */
+li a {
+  text-decoration: none; /* Remove underlines from links */
+  color: #ffffff; /* Set link text color */
+  border: 2px;
+  padding: 5px 10px; /* Add padding around link text */
+  border-bottom: 2px solid transparent; /* Add a transparent bottom border for decoration */
+  transition: border-color 0.3s; /* Apply a smooth transition effect to border color changes */
+}
+
+/* Apply specific styling to list items that are not the last child */
+li:not(:last-child) {
+  margin-right: 20px; /* Add some space between the list items */
+}
+
+/* Styling when hovering over link items */
+li a:hover { 
+  color: #73dab5; /* Change link text color when hovering */
+}
+
+.logout {
+  color:#ffffff /* your default color */;
+}
+
+.logout:hover {
+  color: #73dab5; /* Change link text color when hovering */
+}

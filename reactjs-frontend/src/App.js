@@ -1,20 +1,19 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-
-import UploadStep1 from './UploadStep1';
-import Nav from './Nav';
-import Home from './Home';
-import UploadStep2 from './UploadStep2';
-import UploadStep3 from './UploadStep3';
-import useToken from './useToken';
-import Login from './Login';
-import Profile from './Profile';
-import Browser from './Browser';
-import ObservationPage from './observationView'; // Note the corrected import
-import NotFound from './NotFound';
-import FieldGuide from './Fieldguide';
-import IndividualFieldGuide from './IndivFieldGuide';
-import PublicProfile from './PublicProfile'
+import UploadStep1 from './UploadSteps/UploadStep1';
+import Nav from './Other/Nav';
+import Home from './Other/Home';
+import UploadStep2 from './UploadSteps/UploadStep2';
+import UploadStep3 from './UploadSteps/UploadStep3';
+import useToken from './Other/useToken';
+import Login from './Other/Login';
+import Profile from './Profiles/Profile';
+import Browser from './BrowseSteps/Browser';
+import ObservationPage from './BrowseSteps/ObservationView';
+import NotFound from './Other/NotFound';
+import FieldGuide from './BrowseSteps/Fieldguide';
+import IndividualFieldGuide from './BrowseSteps/IndivFieldGuide';
+import PublicProfile from './Profiles/PublicProfile'
 
 const App = () => {
   const { token, removeToken, setToken } = useToken();
