@@ -538,7 +538,8 @@ function UploadStep3(props) {
     const sendImageDataToBackend = async (dataApiArray) => {
 
         console.log(dataApiArray);
-
+        
+        // format in a way to send either a zipped request or change to handle formData at a later stage
         try {
             // Send a POST request to the '/information' endpoint with the imageData
             const response = await fetch('/upload', {
