@@ -13,7 +13,7 @@ import ImageTags from '../Other/ImageTags';
 
 function UploadStep3(props) {
 
-    const { token, setToken } = props; // Destructure the specific props you need
+    const { token } = props; // Destructure the specific props you need
     const [username, setUsername] = useState(null);
 
     useEffect(() => {
@@ -41,7 +41,7 @@ function UploadStep3(props) {
 
         // Call getUsername when the component mounts (app starts)
         getUsername();
-    }, [token, setToken]);
+    }, [token]);
 
     //define different variables
     const navigate = useNavigate();
@@ -81,12 +81,12 @@ function UploadStep3(props) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch('/informationStep3', {
-                    method: 'POST',
+                const response = await fetch(`/upload/information?username=${encodeURIComponent(username)}`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
+                        Authorization: 'Bearer ' + token,
                     },
-                    body: JSON.stringify({ 'username': username }),
                 });
 
                 if (response.ok) {
@@ -115,6 +115,7 @@ function UploadStep3(props) {
         };
 
         fetchData();
+        // eslint-disable-next-line
     }, [username]);
 
     // Add a new useEffect to watch for changes in 'collections'
@@ -540,10 +541,11 @@ function UploadStep3(props) {
 
         try {
             // Send a POST request to the '/information' endpoint with the imageData
-            const response = await fetch('/information', {
+            const response = await fetch('/upload', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + token,
                 },
                 body: JSON.stringify(dataApiArray), // Use lowercase 'imageData' here, assuming it's your array of data
             });
@@ -557,10 +559,12 @@ function UploadStep3(props) {
             } else {
                 // Handle error: Log the status text from the response
                 console.error('Error:', response.statusText);
+                setIsLoading(false);
             }
         } catch (error) {
             // Handle exceptions that may occur during the fetch request, e.g., network issues
             console.error('Error:', error);
+            setIsLoading(false);
         }
     };
 
@@ -626,7 +630,6 @@ function UploadStep3(props) {
             }
         }
     }, [selectedImageIndex, imageData, photographers, collectors, collections]);
-
     return (
 
         <div className="upload-step-container">
@@ -798,18 +801,19 @@ function UploadStep3(props) {
                         />
                     </div>
 
+                    <hr />
+
                     {/* Scientific name autosearch */}
                     <div>
-
-                        <AutocompleteGBIF onValueSet={selectedScientificName} onUpdateScientificName={handleUpdateScientificName} onUpdateClassKing={handleClassKing} />
+                        <AutocompleteGBIF onValueSet={selectedScientificName} onUpdateScientificName={handleUpdateScientificName} onUpdateClassKing={handleClassKing}/>
                     </div>
                     <hr />
 
                     <ImageTags
-                    checkboxValues={checkboxValues}
-                    setCheckboxValues={setCheckboxValues}
-                    subjectCheckBox={subjectCheckBox}
-                    setSubjectCheckBox={setSubjectCheckBox}
+                        checkboxValues={checkboxValues}
+                        setCheckboxValues={setCheckboxValues}
+                        subjectCheckBox={subjectCheckBox}
+                        setSubjectCheckBox={setSubjectCheckBox}
                     />
 
                     <hr />
@@ -865,13 +869,13 @@ function UploadStep3(props) {
                     <button className='finalise-button' onClick={handleCheckUpload}>finalise</button>
 
                     {/* Loading indicator */}
-        {isLoading && (
-          <div className="loading-indicator">
-            <p>Please wait for items to finish loading</p>
-            <div className="spinner"></div>
-          </div>
-        )}
-        
+                    {isLoading && (
+                        <div className="loading-indicator">
+                            <p>Please wait for items to finish loading</p>
+                            <div className="spinner"></div>
+                        </div>
+                    )}
+
                     <hr />
                     <br />
                     <br />

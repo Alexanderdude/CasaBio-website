@@ -42,9 +42,6 @@
   padding: 25px;
   box-sizing: border-box;
   align-items: flex-start;
-  overflow-y: auto;
-  overflow-x: hidden;
-  max-height: 100vh;
 }
 
 .upload-step-right h2 {

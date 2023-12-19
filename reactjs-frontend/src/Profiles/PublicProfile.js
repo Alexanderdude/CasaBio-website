@@ -15,7 +15,7 @@ function Profile() {
     function getData() {
         axios({
             method: 'GET',
-            url: '/userprofile',
+            url: '/profile/public',
             params: { name: name },  // Assuming 'name' is a query parameter
         })
             .then((response) => {

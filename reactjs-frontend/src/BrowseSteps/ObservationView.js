@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useParams, Navigate } from 'react-router-dom';
 import './ObservationView.css'; // Import your custom CSS
 import QuarterSquareGrid from './QuarterSquareGrid';
+import StarRating from './StarRating';
 
 function ObservationView() {
   const { observationID } = useParams();
@@ -13,22 +14,19 @@ function ObservationView() {
   useEffect(() => {
     // Make the API request using Axios
     axios({
-      method: 'POST',
-      url: '/singleSearch',
-      data: {
+      method: 'GET',
+      url: '/observation/search',
+      params: {
         primaryType: 'mainImageID',
         primaryTerm: observationID,
         filterType: '',
         filterTerm: '',
         page: 1,
-        per_page: 20,
+        per_page: 2,
       },
     })
       .then(async (response) => {
         setObservationData(response.data);
-
-        // Handle the response data here
-        console.log('API response:', response.data);
 
         // Check if the response data is an empty array
         if (Array.isArray(response.data) && response.data.length === 0) {
@@ -62,6 +60,13 @@ function ObservationView() {
           <p>Photographer: {observationData[0]?.photographers || ''}</p>
           <p>Country: {observationData[0]?.country || ''}</p>
           <p>City/Town: {observationData[0]?.city || ''}</p>
+          
+          {observationData && (
+            <StarRating
+              id={observationData[0]?._id}
+              ratings={observationData[0]?.ratings}
+            />
+          )}
           <div className="bordered-box">
             {observationData.length > 0 && (
               // Render the QuarterSquareGrid component with specified props

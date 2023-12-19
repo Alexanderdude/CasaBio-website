@@ -1,0 +1,20 @@
+.rating label.selected {
+    color: gold;
+    /* Change the color or apply other styles for selected stars */
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+}
+
+.rating label {
+    cursor: pointer;
+    font-size: 24px; /* Adjust the font size as needed */
+    margin-right: 5px; /* Adjust the spacing between stars */
+  }
+
+/* Hide radio inputs */
+.rating input {
+    display: none;
+}

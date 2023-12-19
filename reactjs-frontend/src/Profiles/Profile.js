@@ -54,7 +54,10 @@ function Profile(props) {
         // Send a POST request with the data
         axios({
             method: 'POST',
-            url: '/editProfile',
+            url: '/profile/edit',
+            headers: {
+                Authorization: 'Bearer ' + props.token,
+            },
             data: data,
         })
             .then((response) => {

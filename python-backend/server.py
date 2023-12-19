@@ -125,10 +125,10 @@ def create_token():
     return {"msg": "Wrong username or password"}, 401    
 
 #create an API that receives information required for the uploadStep3 page
-@app.route('/informationStep3', methods=['POST'])
+@app.route('/upload/information', methods=['GET'])
+@jwt_required()
 def recieve_information_data():
-    requested_data = request.get_json()
-    username = requested_data['username']
+    username = request.args.get('username')
     # Initialize lists to hold unique collectors, collections, and photographers
     unique_collectors = []
     unique_collections = []
@@ -189,8 +189,9 @@ def save_base64_image(username, image_id, base64_data, images_directory):
     except Exception as e:
         return False, str(e)
 
-#create the /information api point
-@app.route('/information', methods=['POST'])
+#create the /observation/upload api point
+@app.route('/upload', methods=['POST'])
+@jwt_required()
 def receive_image_data():
     try:
         #try recieve the data request
@@ -263,13 +264,12 @@ def receive_image_data():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route('/get_image', methods=['POST'])
+@app.route('/observation/get_image', methods=['GET'])
 def get_image():
     try:
-        imageData= request.get_json()
-        # Get the username and image name from the request
-        username = imageData['username']
-        image_name = imageData['image_name']
+        # Get the username and image name from the params
+        username = request.args.get('username')
+        image_name = request.args.get('image_name')
 
         # Construct the path to the image
         image_path = os.path.join(images_directory, username, f"{image_name}.jxl")
@@ -313,7 +313,7 @@ def my_profile():
     return jsonify(results), 200
 
 #create a /profile api point with a jwt required decorator
-@app.route('/userprofile', methods=['GET'])
+@app.route('/profile/public', methods=['GET'])
 def public_profile():
 
     username = request.args.get('name')
@@ -329,8 +329,10 @@ def public_profile():
     
     #returns the new variable
     return jsonify(results), 200
+
 # Create a /editProfile route
-@app.route('/editProfile', methods=['POST'])
+@app.route('/profile/edit', methods=['POST'])
+@jwt_required()
 def edit_profile():
     # Get the data from the request
     username = request.json.get('username')
@@ -395,55 +397,18 @@ def register_user():
     
     return jsonify(response), 201  # Return a 201 (Created) status code
 
-@app.route('/singleSearch', methods=['POST'])
-def search_single():
-    try:
-        # Get the search criteria and pagination parameters from the request data
-        search_criteria = request.json
-        page = search_criteria['page']
-        per_page = search_criteria['per_page']
-
-        # Extract the search criteria from the dictionary
-        primary_searchTerm = search_criteria['primaryTerm']
-        primary_searchType = search_criteria['primaryType']
-        filter_searchTerm = search_criteria['filterTerm']
-
-        # Calculate the start and end index for pagination
-        start_idx = (page - 1) * per_page
-
-        # Checks if filter term is blank
-        if filter_searchTerm == '':
-
-            # create a blank variable
-            results=[]
-
-            #cycles through each document with specific primary search fields and values
-            for doc in informationDB.find({'selector': {primary_searchType: primary_searchTerm}, 'skip':start_idx, 'limit':per_page}):
-                
-                # adds each doc to the variable
-                results.append(doc)
-            
-            #returns the new variable
-            return jsonify(results), 200
-        
-    except Exception as e:
-        # Handle any errors
-        print("Error:", str(e))
-        return jsonify({"error": str(e)}), 500
-
-@app.route('/search', methods=['POST'])
+@app.route('/observation/search', methods=['GET'])
 def search_database():
     try:
-        # Get the search criteria and pagination parameters from the request data
-        search_criteria = request.json
-        page = search_criteria['page']
-        per_page = search_criteria['per_page']
+        # Get the pagination parameters from the request data
+        page = int(request.args.get('page'))
+        per_page = int(request.args.get('per_page'))
 
         # Extract the search criteria from the dictionary
-        primary_searchTerm = search_criteria['primaryTerm']
-        primary_searchType = search_criteria['primaryType']
-        filter_searchTerm = search_criteria['filterTerm']
-        filter_searchType = search_criteria['filterType']
+        primary_searchTerm = request.args.get('primaryTerm') or ''
+        primary_searchType = request.args.get('primaryType') or ''
+        filter_searchTerm = request.args.get('filterTerm') or ''
+        filter_searchType = request.args.get('filterType') or ''
 
         # Calculate the start and end index for pagination
         start_idx = (page - 1) * per_page
@@ -467,10 +432,14 @@ def search_database():
         # Define the view name based on field_name
         view_name = f'{primary_searchType}/filter_by_field_start_letter'
 
-        # get the first letter
-        first_letter = primary_searchTerm[0].lower()
+        # Check the value of primary_searchType
+        if primary_searchType == 'mainImageID':
+            first_letter = primary_searchTerm[0]
+        else:
+            # get the first letter
+            first_letter = primary_searchTerm[0].lower()
 
-        # gets each document with first letter at scientific name
+        # gets each document with first letter at specified field
         for doc in informationDB.view(view_name, include_docs=True, key=first_letter):
             
             # adds each doc to the variable
@@ -517,6 +486,26 @@ def search_database():
         # Handle any errors
         print("Error:", str(e))
         return jsonify({"error": str(e)}), 500
+
+@app.route('/ratings', methods=['POST'])
+def star_ratings():
+    # Get the data from the request
+    doc_id = request.json.get('id')
+    new_ratings = request.json.get('ratings')
+
+    # Try to get the document with the correct ID
+    try:
+        doc = informationDB.get(doc_id)
+        if doc:
+            # Update the ratings field and save the document
+            doc['ratings'] = new_ratings
+            informationDB.save(doc)
+            return '', 200
+        else:
+            return '', 404  # Document not found
+    except Exception as e:
+        print(f"Error updating document: {e}")
+        return '', 500  # Return 500 for other errors
 
 # Start the Flask application if this script is run directly
 if __name__ == "__main__":

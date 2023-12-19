@@ -11,39 +11,41 @@ const AutocompleteGBIF = ({ onValueSet, onUpdateScientificName, onUpdateClassKin
     const [suggestions, setSuggestions] = useState([]);
     const [selectedSuggestion, setSelectedSuggestion] = useState(null);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isIdentified, setIsIdentified] = useState('Unidentified');
+    const [specifiedKingdom, setSpecifiedKingdom] = useState('Plantae'); // "Animalia"
 
     //useEffect to update inputvalue when the onValueSet changes
     useEffect(() => {
 
         setInputValue(onValueSet);
 
-    },[onValueSet]);
+    }, [onValueSet]);
 
     // Effect to fetch suggestions from GBIF API based on input value
     useEffect(() => {
 
-        // Function to fetch suggestions from GBIF API
         const fetchData = async () => {
-
-            //try an API request from GBIF or displays an error
             try {
                 const response = await axios.get(
-                    //API request from GBIF to give limit 5 suggestions from the species database
                     `https://api.gbif.org/v1/species/suggest?q=${inputValue}&limit=5`
                 );
 
-                console.log(response);
-
                 // Extract and trim the name from suggestion data
-                const fetchedSuggestions = response.data.map((item) => {
-                    const nameParts = item.scientificName.split(','); // Split name and date
-                    return nameParts[0].trim(); // Extract and trim the name
-                });
+                const uniqueNames = new Set();
+                const fetchedSuggestions = response.data.reduce((acc, item) => {
+                    const species = item.canonicalName;
+
+                    // Check if the name is unique before adding to suggestions
+                    if (!uniqueNames.has(species)) {
+                        uniqueNames.add(species);
+                        acc.push(species);
+                    }
+
+                    return acc;
+                }, []);
 
                 setSuggestions(fetchedSuggestions);
             } catch (error) {
-
-                //display the error
                 console.error('Error fetching suggestions from GBIF:', error);
             }
         };
@@ -64,17 +66,17 @@ const AutocompleteGBIF = ({ onValueSet, onUpdateScientificName, onUpdateClassKin
                 //API to search species from GBIF with selected name
                 `https://api.gbif.org/v1/species/search?q=${name}`
             );
-        
+
             const detailedInfo = response.data;
-        
-            //gets different results and displays them in console ##TO BE CHANGES LATER
-            if (detailedInfo.results && detailedInfo.results.length > 0) {
-                const firstResult = detailedInfo.results[0];
+
+            // Filter results based on the specified kingdom
+            const filteredResults = detailedInfo.results.filter(result => result.kingdom === specifiedKingdom);
+
+            if (filteredResults.length > 0) {
+                const firstResult = filteredResults[0];
                 onUpdateClassKing(firstResult.class, firstResult.kingdom);
             }
         } catch (error) {
-
-            //error message is API is invalid
             console.error('Error fetching detailed information from GBIF:', error);
         }
     };
@@ -98,46 +100,119 @@ const AutocompleteGBIF = ({ onValueSet, onUpdateScientificName, onUpdateClassKin
         setTimeout(() => setShowSuggestions(false), 200);
     };
 
+    // changes the identifed values
+    const handleIdentifiedChange = () => {
+        setIsIdentified((prevStatus) =>
+            prevStatus === 'Identified' ? 'Unidentified' : 'Identified'
+        );
+    };
+
+    useEffect(() => {
+        // Your side effect logic based on the value of isIdentified
+        if (isIdentified === 'Unidentified') {
+            onUpdateScientificName('Unidentified')
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isIdentified]); // Run the effect whenever isIdentified changes
+
+    // changes the Kingdom values
+    const handleKingdomChange = () => {
+        setSpecifiedKingdom((prevStatus) =>
+            prevStatus === 'Plantae' ? 'Animalia' : 'Plantae'
+        );
+    };
+
     return (
         <div className="autocomplete-container">
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{ marginRight: '20px' }}>
+                    <label>
+                        Identified
+                        <input
+                            type="checkbox"
+                            checked={isIdentified === 'Identified'}
+                            onChange={handleIdentifiedChange}
+                        />
+                    </label>
+                </div>
 
-            {/* add a label to the input box */}
-            <label htmlFor="sciName">Enter Species Name</label>
-            <div className="dropdown">
-
-                {/* Displays the input box with different functions for change */}
-                <input
-                    type="text"
-                    id="sciName"
-                    name="sciName"
-                    value={inputValue || ''}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                />
-
-                {/* Displays suggestions from API request after typing 2 letters */}
-                {showSuggestions && inputValue.length >= 2 && (
-                    <div className="dropdown-content">
-
-                        {/* Maps out all the suggestions in the dropdown window */}
-                        {suggestions.map((suggestion) => (
-                            
-                            <div
-                                key={suggestion}
-                                className={`dropdown-item ${selectedSuggestion === suggestion ? 'selected' : ''
-                                    }`}
-                                    
-                                onClick={() => handleSelectSuggestion(suggestion)}
-                            >
-                                {/* add an onclick function when user clicks on the suggestion */}
-
-                                {suggestion}
-                            </div>
-                        ))}
-                    </div>
-                )}
+                <div>
+                    <label>
+                        Unidentified
+                        <input
+                            type="checkbox"
+                            checked={isIdentified === 'Unidentified'}
+                            onChange={handleIdentifiedChange}
+                        />
+                    </label>
+                </div>
             </div>
+            {isIdentified === 'Identified' && (
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <div style={{ marginRight: '20px' }}>
+                        <label>
+                            Animalia
+                            <input
+                                type="checkbox"
+                                checked={specifiedKingdom === 'Animalia'}
+                                onChange={handleKingdomChange}
+                            />
+                        </label>
+                    </div>
+
+                    <div>
+                        <label>
+                            Plantae
+                            <input
+                                type="checkbox"
+                                checked={specifiedKingdom === 'Plantae'}
+                                onChange={handleKingdomChange}
+                            />
+                        </label>
+                    </div>
+                </div>
+            )}
+            {isIdentified === 'Identified' && (
+                <>
+                    {/* add a label to the input box */}
+                    <label htmlFor="sciName">Enter Species Name</label>
+                    <div className="dropdown">
+
+                        {/* Displays the input box with different functions for change */}
+                        <input
+                            type="text"
+                            id="sciName"
+                            name="sciName"
+                            value={inputValue || ''}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            onFocus={handleInputFocus}
+                            onBlur={handleInputBlur}
+                        />
+
+                        {/* Displays suggestions from API request after typing 2 letters */}
+                        {showSuggestions && inputValue.length >= 2 && (
+                            <div className="dropdown-content">
+
+                                {/* Maps out all the suggestions in the dropdown window */}
+                                {suggestions.map((suggestion) => (
+
+                                    <div
+                                        key={suggestion}
+                                        className={`dropdown-item ${selectedSuggestion === suggestion ? 'selected' : ''
+                                            }`}
+
+                                        onClick={() => handleSelectSuggestion(suggestion)}
+                                    >
+                                        {/* add an onclick function when user clicks on the suggestion */}
+
+                                        {suggestion}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 };

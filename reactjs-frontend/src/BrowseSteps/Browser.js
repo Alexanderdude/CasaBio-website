@@ -30,16 +30,16 @@ function Browser() {
 
         // Make the API request using Axios
         axios({
-            method: "POST",
-            url: '/search',
-            data: {
+            method: "GET",
+            url: '/observation/search',
+            params: {
                 primaryType: primarySearchType.toLowerCase(),
                 primaryTerm: primarySearchTerm,
                 filterType: filterSearchType.toLowerCase(),
                 filterTerm: filterSearchTerm,
                 page: page,
                 per_page: perPage
-            }
+            },
         })
             .then(async (response) => {
                 // Handle the response data here
@@ -165,11 +165,11 @@ function Browser() {
 
     const getImageBackend = async (image_name, username) => {
         try {
-            // Make a POST request to your backend API
+            // Make a GET request to your backend API
             axios({
-                method: "POST",
-                url: '/get_image',
-                data: {
+                method: "GET",
+                url: '/observation/get_image',
+                params: {
                     username: username,
                     image_name: image_name,
                 }

@@ -43,9 +43,25 @@ const ImageCrop = ({ selectedImage, singleSelectedImageIndex, setUploadedImages,
                 crop.height
             );
 
-            // Convert the canvas to a Blob
+            // Calculate the target dimensions
+            const aspectRatio = crop.width / crop.height;
+            const targetWidth = Math.max(1000, crop.width);
+            const targetHeight = Math.max(1000, targetWidth / aspectRatio);
+
+            // Create a new canvas for scaling
+            const scaledCanvas = document.createElement('canvas');
+            const scaledCtx = scaledCanvas.getContext('2d');
+
+            // Set the new canvas size to the target dimensions
+            scaledCanvas.width = targetWidth;
+            scaledCanvas.height = targetHeight;
+
+            // Scale and draw the cropped image onto the new canvas
+            scaledCtx.drawImage(canvas, 0, 0, targetWidth, targetHeight);
+
+            // Convert the scaled canvas to a Blob
             const blob = await new Promise((resolve) =>
-                canvas.toBlob(resolve, 'image/png', 1.0)
+                scaledCanvas.toBlob(resolve, 'image/png', 1.0)
             );
 
             return blob;
@@ -55,6 +71,7 @@ const ImageCrop = ({ selectedImage, singleSelectedImageIndex, setUploadedImages,
         }
     };
 
+    // function to save Cropped Image
     const handleSaveCroppedImage = async () => {
         try {
 
@@ -71,6 +88,28 @@ const ImageCrop = ({ selectedImage, singleSelectedImageIndex, setUploadedImages,
                     return newImages;
                 });
             }
+
+            // Close the modal
+            handleCloseModal();
+        } catch (error) {
+            console.error('Error cropping image:', error);
+        }
+    };
+
+    // function to save as new image
+    const handleAddNewCroppedImage = async () => {
+        try {
+            // Save the cropped image
+            const blob = await getCroppedImg(selectedImage, crop);
+
+            // create blob to URL
+            const croppedImageUrl = URL.createObjectURL(blob);
+
+            // save as a new Image
+            setUploadedImages((prevImages) => {
+                const newImages = [...prevImages, { mainImage: croppedImageUrl }];
+                return newImages;
+            });
 
             // Close the modal
             handleCloseModal();
@@ -158,7 +197,22 @@ const ImageCrop = ({ selectedImage, singleSelectedImageIndex, setUploadedImages,
                                 marginTop: '10px',
                             }}
                         >
-                            Save Cropped Image
+                            Save
+                        </button>
+                    )}
+
+                    {isCropping && (
+                        <button
+                            onClick={handleAddNewCroppedImage}
+                            style={{
+                                backgroundColor: '#919312',
+                                color: '#ffffff',
+                                borderRadius: '10px',
+                                padding: '10px 20px',
+                                marginTop: '10px',
+                            }}
+                        >
+                            Add as new Image
                         </button>
                     )}
 
