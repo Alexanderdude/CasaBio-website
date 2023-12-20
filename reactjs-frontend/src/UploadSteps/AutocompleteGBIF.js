@@ -66,7 +66,7 @@ const AutocompleteGBIF = ({ onValueSet, onUpdateScientificName, onUpdateClassKin
                 //API to search species from GBIF with selected name
                 `https://api.gbif.org/v1/species/search?q=${name}`
             );
-
+ 
             const detailedInfo = response.data;
 
             // Filter results based on the specified kingdom

@@ -156,7 +156,7 @@ function UploadStep3(props) {
     const [longitude, setLongitude] = useState('');
     const [accuracy, setAccuracy] = useState('');
     const [showMapModal, setShowMapModal] = useState(false);
-    const [selectedScientificName, setSelectedScientificName] = useState('');
+    const [selectedScientificName, setSelectedScientificName] = useState('Unidentified');
     const [taxonInput, setTaxonInput] = useState(null);
     const [kingdomInput, setKingdomInput] = useState(null);
     const [inputDate, setInputDate] = useState(null);
@@ -165,7 +165,6 @@ function UploadStep3(props) {
     const [cityInput, setCityInput] = useState(null);
     const [preciseInput, setPreciseInput] = useState(null);
 
-
     //sets scientific name for gbif
     const handleUpdateScientificName = (scientificName) => {
         setSelectedScientificName(scientificName);
@@ -173,10 +172,10 @@ function UploadStep3(props) {
 
     //sets Class and kingdom from gbif
     const handleClassKing = (classValue, kingdomValue) => {
-
         setTaxonInput(classValue);
         setKingdomInput(kingdomValue);
     };
+
 
     //function to show the map modal
     const handleMapModalOpen = () => {
@@ -224,7 +223,7 @@ function UploadStep3(props) {
                 province: image.province || null,
                 city: image.city || null,
                 preciseLocality: image.preciseLocality || null,
-                sciName: image.sciName || null,
+                sciName: image.sciName || 'Unidentified',
                 taxon: image.taxon || null,
                 kingdom: image.kingdom || null,
                 mainImageID: image.mainImageID || [],
@@ -468,26 +467,10 @@ function UploadStep3(props) {
         }
     };
 
-    // function to convert a blob images to a base64
-    const handleBlobToBase = async (blobUrl) => {
-        try {
-            const response = await fetch(blobUrl);
-            const blob = await response.blob();
-            const base64String = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => {
-                    resolve(reader.result.split(',')[1]);
-                };
-                reader.onerror = (error) => {
-                    reject(error);
-                };
-                reader.readAsDataURL(blob);
-            });
-            return base64String;
-        } catch (error) {
-            console.error('Error fetching Blob data:', error);
-            throw error; // Rethrow the error so the caller can handle it
-        }
+    const convertBlobUrlToBlob = async (blobUrl) => {
+        const response = await fetch(blobUrl);
+        const blob = await response.blob();
+        return blob;
     };
 
     // function to format the array for sending to backend
@@ -500,28 +483,11 @@ function UploadStep3(props) {
             const idImage = uuidv4(); // Generate a unique ID for the main image
             updatedImageData[i].mainImageID = idImage; // Assign the ID to the main image
 
-            try {
-                const tempString = updatedImageData[i].mainImage;
-                updatedImageData[i].mainImage = await handleBlobToBase(tempString); // Await the result
-            } catch (error) {
-                console.error('Error converting main image:', error);
-            }
-
             // Get the extra images for the current image (or an empty array if none)
             const extraImages = updatedImageData[i]?.extraImage ?? [];
 
             // Generate unique IDs for each extra image using map
             const extraImageIDs = extraImages.map(() => uuidv4());
-
-            // Loop through extra images
-            for (let n = 0; n < extraImages.length; n++) {
-                try {
-                    const tempString = extraImages[n];
-                    updatedImageData[i].extraImage[n] = await handleBlobToBase(tempString); // Await the result
-                } catch (error) {
-                    console.error('Error converting extra image:', error);
-                }
-            }
 
             // Assign the array of unique extra image IDs to the current image
             updatedImageData[i].extraImageID = extraImageIDs;
@@ -534,36 +500,77 @@ function UploadStep3(props) {
         sendImageDataToBackend(updatedImageData);
     };
 
+    const createFormData = async (dataItem) => {
+        const formData = new FormData();
+
+        // Append string data from the first index of dataApiArray
+        for (const key in dataItem) {
+            if (dataItem.hasOwnProperty(key) && key !== 'mainImage' && key !== 'extraImage') {
+                const value = dataItem[key];
+
+                // Convert arrays and objects to JSON strings without backslashes
+                const serializedValue = Array.isArray(value) || typeof value === 'object' ? JSON.stringify(value) : value;
+
+                formData.append(key, serializedValue);
+            }
+        }
+
+        // Append mainImage with its corresponding ID
+        const mainImageBlob = await convertBlobUrlToBlob(dataItem.mainImage);
+        const mainImageFileName = `${dataItem.mainImageID}`;
+        formData.append(mainImageFileName, mainImageBlob, mainImageFileName);
+
+        // Append extraImages with their corresponding IDs
+        if (Array.isArray(dataItem.extraImage) && Array.isArray(dataItem.extraImageID) && dataItem.extraImage.length === dataItem.extraImageID.length) {
+            for (let i = 0; i < dataItem.extraImage.length; i++) {
+                const extraImageUrl = dataItem.extraImage[i];
+                const extraImageBlob = await convertBlobUrlToBlob(extraImageUrl);
+
+                // extraImageFileName
+                const extraImageFileName = `${dataItem.extraImageID[i]}`;
+
+                formData.append(extraImageFileName, extraImageBlob, extraImageFileName);
+            }
+        }
+
+        return formData;
+    };
+
     // Function to send the array to the backend
     const sendImageDataToBackend = async (dataApiArray) => {
 
-        console.log(dataApiArray);
-        
-        // format in a way to send either a zipped request or change to handle formData at a later stage
         try {
-            // Send a POST request to the '/information' endpoint with the imageData
-            const response = await fetch('/upload', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + token,
-                },
-                body: JSON.stringify(dataApiArray), // Use lowercase 'imageData' here, assuming it's your array of data
-            });
+            // Loop through each element in the dataApiArray
+            for (const dataItem of dataApiArray) {
+                // Create FormData for the current dataItem
+                const formData = await createFormData(dataItem);
 
-            // Check if the response status is okay (e.g., 200)
-            if (response.ok) {
-                // Handle success: Log a message indicating success
-                console.log('Information array sent successfully');
-                setIsLoading(false);
-                alert("Everything has uploaded.")
-            } else {
-                // Handle error: Log the status text from the response
-                console.error('Error:', response.statusText);
-                setIsLoading(false);
+                // Send a POST request to the '/upload' endpoint with the current formData
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    headers: {
+                        Authorization: 'Bearer ' + token,
+                    },
+                    body: formData,
+                });
+
+                // Check if the response status is okay (e.g., 200) for each individual request
+                if (response.ok) {
+                    // Handle success for each individual request: Log a message indicating success
+                    console.log('Information sent successfully:', dataItem);
+                    // You may add additional handling specific to success for each item
+                } else {
+                    // Handle error for each individual request: Log the status text from the response
+                    console.error('Error:', response.statusText);
+                    // You may add additional handling specific to errors for each item
+                }
             }
+
+            // After all requests are processed
+            setIsLoading(false);
+            alert('Everything has uploaded.');
         } catch (error) {
-            // Handle exceptions that may occur during the fetch request, e.g., network issues
+            // Handle exceptions that may occur during the fetch requests, e.g., network issues
             console.error('Error:', error);
             setIsLoading(false);
         }
@@ -806,7 +813,7 @@ function UploadStep3(props) {
 
                     {/* Scientific name autosearch */}
                     <div>
-                        <AutocompleteGBIF onValueSet={selectedScientificName} onUpdateScientificName={handleUpdateScientificName} onUpdateClassKing={handleClassKing}/>
+                        <AutocompleteGBIF onValueSet={selectedScientificName} onUpdateScientificName={handleUpdateScientificName} onUpdateClassKing={handleClassKing} />
                     </div>
                     <hr />
 
