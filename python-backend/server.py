@@ -161,13 +161,10 @@ def recieve_information_data():
 
     return jsonify(unique_data), 200
 
-def save_base64_image(username, image_id, base64_data, images_directory):
+def save_image(username, imageData, image_id, images_directory):
     try:
-        # Decode the base64 data
-        image_data = base64.b64decode(base64_data)
-
         # Create a BytesIO object to work with the binary data
-        image_buffer = io.BytesIO(image_data)
+        image_buffer = io.BytesIO(imageData.read())
 
         # Open the image using PIL
         image = Image.open(image_buffer)
@@ -186,79 +183,76 @@ def save_base64_image(username, image_id, base64_data, images_directory):
         jxl_data = imagecodecs.jpegxl_encode(rgb_data)
         with open(image_path, "wb") as jxl_file:
             jxl_file.write(jxl_data)
+
     except Exception as e:
         return False, str(e)
 
-#create the /observation/upload api point
+#create the /upload api point
 @app.route('/upload', methods=['POST'])
 @jwt_required()
 def receive_image_data():
     try:
         #try recieve the data request
-        data = request.get_json()
+        data = request.form
         
         if not data: #display error message
             return jsonify({"error": "No data received"}), 400
 
-        # Iterate through each entry in imageData
-        for entry in data:
-            # Process and save specific fields as needed
-            username = entry.get("username")
-            photographer = entry.get("photographer")
-            collector = entry.get("collector")
-            collection = entry.get("collection")
-            sciName = entry.get("sciName")
-            taxon = entry.get('taxon')
-            kingdom = entry.get('kingdom')
-            latitude = entry.get('latitude')
-            longitude = entry.get('longitude')
-            accuracy = entry.get('accuracy')
-            imageDate = entry.get('date')
-            country = entry.get('country')
-            province = entry.get('province')
-            city = entry.get('city')
-            preciseLocality = entry.get('preciseLocality')
-            mainImageID = entry.get('mainImageID')
-            mainImage = entry.get('mainImage')
-            extraImages = entry.get('extraImage', [])
-            extraImageIDs = entry.get('extraImageID', [])
-            tags = entry.get('tags',{})
-            subject = entry.get('subject',{})
-            
-             # Create a new document in the 'information' database
-            new_document = {
-                "username": username,
-                "photographers": photographer,
-                "collectors": collector,
-                "collections": collection,
-                "scientific_name": sciName,
-                "taxon": taxon,
-                "kingdom": kingdom,
-                "latitude": latitude,
-                "longitude": longitude,
-                "accuracy": accuracy,
-                "imageDate": imageDate,
-                "country": country,
-                "province": province,
-                "city": city,
-                "preciseLocality": preciseLocality,
-                "mainImageID": mainImageID,
-                "extraImageID": extraImageIDs,
-                "tags": tags,
-                "subject": subject
-            }
+        # Process and save specific fields as needed
+        username = data.get("username")
+        photographer = data.get("photographer")
+        collector = data.get("collector")
+        collection = data.get("collection")
+        sciName = data.get("sciName")
+        taxon = data.get('taxon')
+        kingdom = data.get('kingdom')
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        accuracy = data.get('accuracy')
+        imageDate = data.get('date')
+        country = data.get('country')
+        province = data.get('province')
+        city = data.get('city')
+        preciseLocality = data.get('preciseLocality')
+        mainImageID = data.get('mainImageID')
+        extraImageIDs = data.get('extraImageID', [])
+        tags = data.get('tags',{})
+        subject = data.get('subject',{})
+        
+            # Create a new document in the 'information' database
+        new_document = {
+            "username": username,
+            "photographers": photographer,
+            "collectors": collector,
+            "collections": collection,
+            "scientific_name": sciName,
+            "taxon": taxon,
+            "kingdom": kingdom,
+            "latitude": latitude,
+            "longitude": longitude,
+            "accuracy": accuracy,
+            "imageDate": imageDate,
+            "country": country,
+            "province": province,
+            "city": city,
+            "preciseLocality": preciseLocality,
+            "mainImageID": mainImageID,
+            "extraImageID": extraImageIDs,
+            "tags": tags,
+            "subject": subject
+        }
 
-            # Save the new document to the 'information' database
-            informationDB.save(new_document)
+        # Save the new document to the 'information' database
+        informationDB.save(new_document)
 
-            save_base64_image(username,mainImageID,mainImage,images_directory)
+        # Loop over each image file and call save_image function
+        for image_key, image_file in request.files.items():
+            # Extract the filename from the image_key
+            _, filename = os.path.split(image_key)
 
-            if extraImages and extraImageIDs:
-                for i in range(len(extraImages)):
-                    if extraImages[i] and extraImageIDs[i]:
-                        save_base64_image(username, extraImageIDs[i], extraImages[i], images_directory)
+            # Call save_image function with the username, image_file, and filename
+            save_image(username, image_file, filename, images_directory)
 
-                        
         return jsonify({"message": "Data processed and saved successfully"}), 200
 
     except Exception as e:
